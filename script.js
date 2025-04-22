@@ -25,6 +25,10 @@ function renderFolders() {
     const entry = document.createElement('div');
     entry.className = 'folder-entry fade-transition';
     
+    // Create the folder shape container
+    const folderShape = document.createElement('div');
+    folderShape.className = 'folder-shape';
+    
     // Create the tab part (left side)
     const tabElement = document.createElement('div');
     tabElement.className = 'folder-tab';
@@ -35,9 +39,12 @@ function renderFolders() {
     bodyElement.className = 'folder-body';
     bodyElement.innerHTML = `<span class="folder-area">${member.area}</span>`;
     
-    // Add the parts to the folder entry
-    entry.appendChild(tabElement);
-    entry.appendChild(bodyElement);
+    // Add the parts to the folder shape
+    folderShape.appendChild(tabElement);
+    folderShape.appendChild(bodyElement);
+    
+    // Add folder shape to entry
+    entry.appendChild(folderShape);
     
     // Add click event
     entry.addEventListener('click', () => {
