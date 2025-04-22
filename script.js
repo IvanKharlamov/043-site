@@ -4,6 +4,7 @@ const container = document.getElementById('line-container');
 const description = document.getElementById('member-description');
 const networkOverlay = document.getElementById('network-overlay');
 let networkSvg;
+let lineDisplayTimeout = null; // Track the timeout for line display
 
 // Fetch the members data from the JSON file
 fetch('members.json')
@@ -83,28 +84,6 @@ function initNetworkVisualization() {
   networkSvg.setAttribute('class', 'w-full h-full');
   networkSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   
-  // Add CSS for transitions
-  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  style.textContent = `
-    circle {
-      transition: cx 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  cy 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  r 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.4s ease;
-    }
-    line {
-      transition: opacity 0.4s ease;
-    }
-    .animate-blink {
-      animation: blink 3s infinite alternate;
-    }
-    @keyframes blink {
-      0%, 80% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
-  `;
-  networkSvg.appendChild(style);
-  
   // Append SVG to container
   networkOverlay.appendChild(networkSvg);
   
@@ -126,7 +105,7 @@ function calculateNetworkPositions(member) {
   // Generate a more varied seed based on multiple member properties
   const baseSeed = simpleHash(memberId + memberName + memberSince);
   
-  // Number of points to generate (15-30)
+  // Static number of points (15)
   const pointCount = 15;
   
   // Generate points with positions influenced by the hash
@@ -148,11 +127,12 @@ function calculateNetworkPositions(member) {
     const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
     const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
     
+    // Calculate radius based on seed - MULTIPLIED BY 5
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
     const sizeVariation = sizeSeed % 100;
     const radius = (sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
                    sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
-                   2.5 + (sizeVariation % 4) * 0.75) * 5; 
+                   2.5 + (sizeVariation % 4) * 0.75) * 5; // Multiplied by 5
     
     // Add opacity variation
     const opacity = 0.6 + (sizeSeed % 5) * 0.08;
@@ -195,6 +175,12 @@ function calculateNetworkPositions(member) {
 
 // Update the network visualization based on member data
 function updateNetworkVisualization(member) {
+  // Clear any pending line display timeouts to fix the bug
+  if (lineDisplayTimeout) {
+    clearTimeout(lineDisplayTimeout);
+    lineDisplayTimeout = null;
+  }
+
   const { points, connections } = calculateNetworkPositions(member);
   const existingNodes = {};
   
@@ -263,7 +249,8 @@ function updateNetworkVisualization(member) {
   }
   
   // Add a delay before creating connections - wait for dots to move
-  setTimeout(() => {
+  // Store the timeout ID so we can clear it if user changes profile before lines appear
+  lineDisplayTimeout = setTimeout(() => {
     // Create connections with more prominence
     connections.forEach((conn, index) => {
       // Create new connection
