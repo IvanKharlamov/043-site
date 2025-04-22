@@ -21,7 +21,7 @@
     .card {
       position: absolute;
       left: 0;
-      transition: all 0.4s ease;
+      transition: filter 0.8s ease, background-color 0.8s ease;
       z-index: 1;
       width: 300px;
       border-radius: 0.25rem;
@@ -36,7 +36,7 @@
       z-index: 10;
       transform: scale(1);
       background-color: #1f2937;
-      animation: glitch-flicker 0.5s infinite steps(1, end);
+      animation: subtleHueShift 4s infinite alternate;
     }
     .card .card-content {
       display: none;
@@ -51,17 +51,27 @@
       border-radius: 0.25rem;
     }
 
-    @keyframes glitch-flicker {
-      0% { transform: scale(1) translateY(0px); filter: hue-rotate(0deg); }
-      20% { transform: scale(1.01) translateY(1px); filter: hue-rotate(10deg); }
-      40% { transform: scale(0.99) translateY(-1px); filter: hue-rotate(-10deg); }
-      60% { transform: scale(1.01) translateY(0px); filter: hue-rotate(5deg); }
-      80% { transform: scale(0.99) translateY(1px); filter: hue-rotate(-5deg); }
-      100% { transform: scale(1) translateY(0px); filter: hue-rotate(0deg); }
+    @keyframes subtleHueShift {
+      0% { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(15deg); }
+    }
+
+    .film-overlay::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://grainy-gradients.vercel.app/noise.svg');
+      opacity: 0.05;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      z-index: 50;
     }
   </style>
 </head>
-<body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
+<body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8 relative film-overlay">
   <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
     <div id="card-container" class="relative">
