@@ -127,7 +127,7 @@ function calculateNetworkPositions(member) {
   const baseSeed = simpleHash(memberId + memberName + memberSince);
   
   // Number of points to generate (15-30)
-  const pointCount = 15 + Math.floor((baseSeed % 1000) / 1000 * 15);
+  const pointCount = 15;
   
   // Generate points with positions influenced by the hash
   const points = [];
@@ -148,12 +148,11 @@ function calculateNetworkPositions(member) {
     const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
     const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
     
-    // Calculate radius based on seed - MULTIPLIED BY 5
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
     const sizeVariation = sizeSeed % 100;
     const radius = (sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
                    sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
-                   2.5 + (sizeVariation % 4) * 0.75) * 5; // Multiplied by 5
+                   2.5 + (sizeVariation % 4) * 0.75) * 5; 
     
     // Add opacity variation
     const opacity = 0.6 + (sizeSeed % 5) * 0.08;
