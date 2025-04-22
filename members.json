@@ -5,5 +5,20 @@
     "area": "Patient Zero",
     "img": "multi-pass-ewan-1.jpg",
     "text": "bonjour hola hello who are we and who are you at this mad party? we are not a group and you? follow the ones with pass-card and you will see. see what? oh, it depends on your perception. tschüss!"
+  },
+  {
+    "name": "Dora",
+    "level": 2,
+    "area": "Visual Coding",
+    "img": "multi-pass-dora-1.jpg",
+    "text": "Дора синтезирует образы и паттерны, разбирает шейдеры и превращает их в цифровую поэзию. Её инструменты — не кисть, а язык GLSL и её пальцы."
+  },
+  {
+    "name": "Narek",
+    "level": 4,
+    "area": "Noise & Rituals",
+    "img": "multi-pass-narek.jpg",
+    "text": "Нарек работает с шумом как с философским понятием. Он делает из дронов церемонии и превращает каждое выступление в психоакустический опыт."
   }
 ]
+
