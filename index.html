@@ -35,7 +35,13 @@
       display: none;
     }
     .card.active .card-content {
-      display: flex;
+      display: block;
+    }
+    .card.active .card-content img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 0.25rem;
     }
   </style>
 </head>
@@ -76,13 +82,8 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <div class="card-content p-4 flex flex-row items-center justify-start">
-            <img src="${member.img}" alt="${member.name}" class="mr-4 rounded-md w-[90px] h-[130px] object-cover">
-            <div>
-              <h2 class="text-lg font-bold">${member.name}</h2>
-              <p class="text-sm text-gray-400">${member.area}</p>
-              <span class="text-xs mt-1 text-violet-400 block">Уровень ${member.level}</span>
-            </div>
+          <div class="card-content">
+            <img src="${member.img}" alt="${member.name}">
           </div>
         `;
         container.appendChild(card);
@@ -99,7 +100,16 @@
         card.style.top = `${position}px`;
       });
       cardElements[currentIndex].classList.add('active');
-      description.innerText = members[currentIndex].text;
+
+      const member = members[currentIndex];
+      description.innerHTML = `
+        <div>
+          <h2 class="text-2xl font-bold mb-2">${member.name}</h2>
+          <p class="text-sm text-gray-400 mb-1">${member.area}</p>
+          <p class="text-sm text-gray-500 italic mb-2">Уровень ${member.level}</p>
+          <p>${member.text}</p>
+        </div>
+      `;
     }
 
     function nextCard() {
