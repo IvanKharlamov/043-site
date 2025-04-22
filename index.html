@@ -10,10 +10,8 @@
 .fade-transition {
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.line-entry.active {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInActive 0.6s ease forwards;
-}
+.line-entry.active {$1
+  transform: scale(1.15);
 @keyframes fadeInActive {
   0% {
     opacity: 0;
@@ -68,9 +66,8 @@ body {
   object-fit: cover;
   border-radius: 0.25rem;
 }
-.line-entry.active img {
-  display: block;
-}
+$1
+  border: 1px solid rgba(255, 255, 255, 0.15);}
 
 
 
@@ -92,12 +89,20 @@ body {
       <a href="#" class="hover:text-gray-400 transition">my 043</a>
     </nav>
   </header>
-  <h1 class="text-4xl font-bold mt-16 mb-12 self-center font-mono uppercase tracking-wider text-yellow-300">Dossier Archive</h1>
+  <h1 class="text-5xl font-bold mt-24 mb-16 ml-[200px] self-center font-mono uppercase tracking-wider text-yellow-100">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
     <div id="line-container" class="relative">
       <!-- Lines injected here -->
     </div>
-    <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
+    $1
+      <svg id="connection-lines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
+        <line x1="100" y1="120" x2="300" y2="180" stroke="#555" stroke-width="1" />
+        <line x1="100" y1="240" x2="280" y2="310" stroke="#555" stroke-width="1" />
+        <circle cx="100" cy="120" r="3" fill="#888" />
+        <circle cx="300" cy="180" r="3" fill="#888" />
+        <circle cx="100" cy="240" r="3" fill="#888" />
+        <circle cx="280" cy="310" r="3" fill="#888" />
+      </svg>
       <!-- Text will be injected here -->
     </div>
   </div>
@@ -144,7 +149,7 @@ body {
           <p class="text-sm text-gray-500 italic mb-1">ID: ${id}</p>
           <p class="text-xs text-gray-400 uppercase mb-4">Member since ${m.since || '2022'}</p>
           <h3 class="text-lg font-semibold mb-1">About</h3>
-          <p class="mb-4">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice.</p>
+          <p class="mb-4 text-sm text-gray-400">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice. Farmers have long cultivated watermelon not only for food, but also for trade, storage, and cultural ceremonies. The sweetness of a watermelon, its weight, and even the sound it makes when tapped are essential in selecting the perfect one. It's not just a fruit — it's a seasonal signal and social magnet.</p>
           <h3 class="text-lg font-semibold mb-1">Cultural Relevance</h3>
           <p class="mb-4">In some parts of the world, watermelons are used in ceremonies, festivals, and design. Their green-striped surface is now iconic, and their color palette is often used in digital aesthetics and summer promotions.</p>
           <h3 class="text-lg font-semibold mb-1">Fun Facts</h3>
@@ -155,4 +160,3 @@ body {
   </script>
 </body>
 </html>
-
