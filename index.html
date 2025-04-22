@@ -7,6 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
+.card.transitioning {
+  transition: all 0.3s ease;
+  transform: scale(1.02);
+  opacity: 0.8;
+}
     body {
       font-family: 'IBM Plex Mono', monospace;
     }
@@ -36,7 +41,6 @@
       z-index: 10;
       transform: scale(1);
       background-color: #1f2937;
-      animation: subtleHueShift 4s infinite alternate;
     }
     .card .card-content {
       display: none;
@@ -51,28 +55,42 @@
       border-radius: 0.25rem;
     }
 
-    @keyframes subtleHueShift {
-      0% { filter: hue-rotate(0deg); }
-      100% { filter: hue-rotate(15deg); }
+    .glitch-text {
+      position: relative;
+      color: white;
+      animation: flicker 3s infinite linear;
+    }
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 2px;
+      top: 0;
+      color: #ff00c8;
+      opacity: 0.8;
+      clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+    }
+    .glitch-text::before {
+      content: attr(data-text);
+      position: absolute;
+      left: -2px;
+      top: 0;
+      color: #00fff9;
+      opacity: 0.8;
+      clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
     }
 
-    .film-overlay::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: url('https://grainy-gradients.vercel.app/noise.svg');
-      opacity: 0.05;
-      pointer-events: none;
-      mix-blend-mode: overlay;
-      z-index: 50;
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+      }
+      20%, 24%, 55% {
+        opacity: 0.6;
+      }
     }
   </style>
 </head>
-<body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8 relative film-overlay">
-  <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest">Dossier Archive</h1>
+<body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
+  <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest glitch-text" data-text="Dossier Archive">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
     <div id="card-container" class="relative">
       <!-- Cards will be injected here -->
@@ -119,14 +137,18 @@
 
     function updateActiveCard() {
       cardElements.forEach((card, index) => {
-        card.classList.remove('active');
+        card.classList.remove('active'); card.classList.remove('transitioning');
         const position = (index - currentIndex) * 60 + 120;
         card.style.top = `${position}px`;
         card.style.display = 'block';
       });
 
       if (cardElements[currentIndex]) {
-        cardElements[currentIndex].classList.add('active');
+        cardElements[currentIndex].classList.add('transitioning');
+        setTimeout(() => {
+          cardElements[currentIndex].classList.remove('transitioning');
+          cardElements[currentIndex].classList.add('active');
+        }, 10);
         const m = members[currentIndex];
         const id = m.id || (m.name === 'Dasha' ? '00000049' : m.name === 'Narek' ? '00000058' : '00000043');
         description.innerHTML = `
