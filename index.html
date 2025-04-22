@@ -7,6 +7,23 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
+.fade-transition {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.line-entry.active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInActive 0.6s ease forwards;
+}
+@keyframes fadeInActive {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 body {
   background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
   background-size: 4px 4px;
@@ -89,8 +106,8 @@ body {
 }
   </style>
 </head>
-$1
-  <header class="sticky top-0 z-50 bg-black w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide">
+<body>
+  <header class="sticky top-0 z-50 bg-black w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md">
     <div class="text-white font-bold">043</div>
     <nav class="flex items-center gap-8">
       <a href="#" class="hover:text-gray-400 transition">read&watch</a>
@@ -128,7 +145,7 @@ $1
       container.innerHTML = '';
       members.forEach((member, index) => {
         const entry = document.createElement('div');
-        entry.className = 'line-entry';
+        entry.className = 'line-entry fade-transition';
         entry.innerHTML = `<img src="${member.img}" alt="${member.name}">`;
         entry.addEventListener('click', () => {
           currentIndex = index;
