@@ -4,6 +4,11 @@
     "level": 3,
     "area": "Patient Zero",
     "img": "multi-pass-ewan-1.jpg",
+    "id": "00000043",
+    "since": "2022",
+    "about": "Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice. Farmers have long cultivated watermelon not only for food, but also for trade, storage, and cultural ceremonies. The sweetness of a watermelon, its weight, and even the sound it makes when tapped are essential in selecting the perfect one. It's not just a fruit — it's a seasonal signal and social magnet.",
+    "cultural": "In some parts of the world, watermelons are used in ceremonies, festivals, and design. Their green-striped surface is now iconic, and their color palette is often used in digital aesthetics and summer promotions.",
+    "facts": "Seedless watermelons are a genetic marvel. A single watermelon is about 92% water. The largest watermelon ever grown weighed over 150 pounds.",
     "text": "bonjour hola hello who are we and who are you at this mad party? we are not a group and you? follow the ones with pass-card and you will see. see what? oh, it depends on your perception. tschüss!"
   },
   {
@@ -11,6 +16,11 @@
     "level": 2,
     "area": "Visual Coding",
     "img": "multi-pass-dora-1.jpg",
+    "id": "00000049",
+    "since": "2023",
+    "about": "Дора синтезирует образы и паттерны, разбирает шейдеры и превращает их в цифровую поэзию. Её инструменты — не кисть, а язык GLSL и её пальцы. Она работает на грани визуального искусства и программирования, создавая интерактивные инсталляции и генеративные произведения искусства.",
+    "cultural": "Её работы исследуют отношения между технологией и человеческим восприятием. Через код она создаёт визуальные стимулы, которые вызывают эмоциональные и интеллектуальные реакции у зрителя.",
+    "facts": "Дора провела более 15 выставок по всему миру. Её интерактивные работы часто включают в себя элементы, реагирующие на движение и звук. Она также преподаёт программирование для визуальных художников.",
     "text": "Дора синтезирует образы и паттерны, разбирает шейдеры и превращает их в цифровую поэзию. Её инструменты — не кисть, а язык GLSL и её пальцы."
   },
   {
@@ -18,7 +28,11 @@
     "level": 4,
     "area": "Noise & Rituals",
     "img": "multi-pass-narek.jpg",
+    "id": "00000058",
+    "since": "2021",
+    "about": "Нарек работает с шумом как с философским понятием. Он делает из дронов церемонии и превращает каждое выступление в психоакустический опыт. Его звуковые ландшафты исследуют пространство между тишиной и хаосом, структурой и случайностью.",
+    "cultural": "Звуковые практики Нарека уходят корнями в древние ритуалы и современные технологии. Он исследует границы восприятия и трансформации сознания через звук, создавая иммерсивные аудио-пространства.",
+    "facts": "Нарек разработал собственные инструменты для создания звука. Его выступления могут длиться от 15 минут до 8 часов. Он также изучает неврологические аспекты восприятия звука и их влияние на психическое состояние.",
     "text": "Нарек работает с шумом как с философским понятием. Он делает из дронов церемонии и превращает каждое выступление в психоакустический опыт."
   }
 ]
-

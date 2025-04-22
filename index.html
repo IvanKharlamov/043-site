@@ -19,25 +19,25 @@
       <a href="#" class="text-gray-300 hover:text-white transition">my 043</a>
     </nav>
   </header>
-  <h1 class="text-5xl font-bold mt-24 mb-16 mx-auto font-mono uppercase tracking-wider text-yellow-100">Dossier Archive</h1>
-  <div class="flex flex-row gap-16 items-start w-full">
+  <h1 class="text-5xl font-bold mt-24 mb-16 mx-auto font-mono uppercase tracking-wider text-yellow-100 text-center">Dossier Archive</h1>
+  <div class="flex flex-row gap-16 items-start w-full max-w-7xl mx-auto px-6">
     <div id="line-container" class="relative">
-      <!-- Lines injected here -->
+      <div class="text-gray-500 text-sm mb-2">Select member profile</div>
     </div>
     <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
-      <!-- Text will be injected here -->
-      
+      <div class="animate-pulse">Loading member data...</div>
     </div>
-	<div id="network-overlay" class="absolute top-32 right-8 w-1/3 h-96 pointer-events-none z-0">
-	  <svg class="w-full h-full animate-float-lines" xmlns="http://www.w3.org/2000/svg">
-	  <line x1="40" y1="80" x2="180" y2="140" stroke="#fff" stroke-width="0.3" class="animate-draw-line" />
-	  <line x1="60" y1="200" x2="200" y2="260" stroke="#fff" stroke-width="0.3" class="animate-draw-line delay-200" />
-	  <circle cx="40" cy="80" r="6" fill="#fff" class="animate-flicker float-point" />
-	  <circle cx="180" cy="140" r="6" fill="#fff" class="animate-flicker float-point delay-100" />
-	  <circle cx="60" cy="200" r="6" fill="#fff" class="animate-flicker float-point delay-200" />
-	  <circle cx="200" cy="260" r="6" fill="#fff" class="animate-flicker float-point delay-300" />
-	</svg>
-	</div>
+    <div id="network-overlay" class="absolute top-32 right-8 w-1/3 h-96 pointer-events-none z-0">
+      <svg class="w-full h-full animate-float-lines" xmlns="http://www.w3.org/2000/svg">
+        <line x1="40" y1="80" x2="180" y2="140" stroke="#fff" stroke-width="0.3" class="animate-draw-line" />
+        <line x1="60" y1="200" x2="200" y2="260" stroke="#fff" stroke-width="0.3" class="animate-draw-line delay-200" />
+        <circle cx="40" cy="80" r="6" fill="#fff" class="animate-flicker float-point" />
+        <circle cx="180" cy="140" r="6" fill="#fff" class="animate-flicker float-point delay-100" />
+        <circle cx="60" cy="200" r="6" fill="#fff" class="animate-flicker float-point delay-200" />
+        <circle cx="200" cy="260" r="6" fill="#fff" class="animate-flicker float-point delay-300" />
+      </svg>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
