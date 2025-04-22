@@ -89,7 +89,30 @@ body {
 .line-entry.active img {
   display: block;
 }
-  </style>
+  
+@keyframes drawLine {
+  0% {
+    stroke-dasharray: 0, 200;
+    stroke-dashoffset: 200;
+  }
+  100% {
+    stroke-dasharray: 200, 0;
+    stroke-dashoffset: 0;
+  }
+}
+.animate-draw-line {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: drawLine 1.6s ease forwards;
+}
+.float-point {
+  animation: floatDot 2.5s ease-in-out infinite;
+}
+@keyframes floatDot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+$1
 </head>
 <body class="bg-black text-white">
   <header class="sticky top-0 z-50 bg-black w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md">
@@ -110,16 +133,16 @@ body {
     <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
       <!-- Text will be injected here -->
       
-    </div>$1
+    </div>
 <div id="network-overlay" class="absolute top-32 right-8 w-1/3 h-96 pointer-events-none z-0">
   <svg class="w-full h-full animate-float-lines" xmlns="http://www.w3.org/2000/svg">
-    <line x1="40" y1="80" x2="180" y2="140" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
-    <line x1="60" y1="200" x2="200" y2="260" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
-    <circle cx="40" cy="80" r="3" fill="#fff" class="animate-flicker" />
-    <circle cx="180" cy="140" r="3" fill="#fff" class="animate-flicker delay-100" />
-    <circle cx="60" cy="200" r="3" fill="#fff" class="animate-flicker delay-200" />
-    <circle cx="200" cy="260" r="3" fill="#fff" class="animate-flicker delay-300" />
-  </svg>
+  <line x1="40" y1="80" x2="180" y2="140" stroke="#fff" stroke-width="0.3" class="animate-draw-line" />
+  <line x1="60" y1="200" x2="200" y2="260" stroke="#fff" stroke-width="0.3" class="animate-draw-line delay-200" />
+  <circle cx="40" cy="80" r="6" fill="#fff" class="animate-flicker float-point" />
+  <circle cx="180" cy="140" r="6" fill="#fff" class="animate-flicker float-point delay-100" />
+  <circle cx="60" cy="200" r="6" fill="#fff" class="animate-flicker float-point delay-200" />
+  <circle cx="200" cy="260" r="6" fill="#fff" class="animate-flicker float-point delay-300" />
+</svg>
 </div>
   <script>
     let members = [];
