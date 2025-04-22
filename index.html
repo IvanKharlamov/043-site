@@ -11,6 +11,8 @@
       height: 400px;
       width: 320px;
       overflow: visible;
+      margin-left: -80px;
+      margin-top: -60px;
     }
     .card {
       position: absolute;
@@ -45,17 +47,17 @@
     }
   </style>
 </head>
-<body class="bg-black text-white font-sans min-h-screen flex flex-col items-center justify-center p-8">
-  <h1 class="text-3xl font-bold mb-8">Участники 043</h1>
-  <div class="flex flex-row gap-12 items-start">
+<body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
+  <h1 class="text-3xl font-bold mb-8 self-center">Участники 043</h1>
+  <div class="flex flex-row gap-16 items-start w-full">
     <div id="card-container" class="relative">
       <!-- Cards will be injected here -->
     </div>
-    <div id="member-description" class="max-w-md text-gray-300 text-base leading-relaxed self-start mt-[120px]">
+    <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed mt-[80px]">
       <!-- Text will be injected here -->
     </div>
   </div>
-  <div class="mt-6 flex gap-4">
+  <div class="mt-6 flex gap-4 self-center">
     <button onclick="prevCard()" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-300">↑</button>
     <button onclick="nextCard()" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-300">↓</button>
   </div>
@@ -103,11 +105,17 @@
         cardElements[currentIndex].classList.add('active');
         const m = members[currentIndex];
         description.innerHTML = `
-          <div>
-            <h2 class="text-2xl font-bold mb-2">${m.name}</h2>
+          <div class="mb-4">
+            <h2 class="text-2xl font-bold mb-1 tracking-wide uppercase">${m.name}</h2>
             <p class="text-sm text-gray-400 mb-1">${m.area}</p>
-            <p class="text-sm text-gray-500 italic mb-2">Уровень ${m.level}</p>
-            <p>${m.text}</p>
+            <p class="text-sm text-gray-500 italic mb-1">ID: ${m.id || '00000043'}</p>
+            <p class="text-xs text-gray-400 uppercase mb-4">Member since ${m.since || '2022'}</p>
+            <h3 class="text-lg font-semibold mb-1">About</h3>
+            <p class="mb-4">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice.</p>
+            <h3 class="text-lg font-semibold mb-1">Cultural Relevance</h3>
+            <p class="mb-4">In some parts of the world, watermelons are used in ceremonies, festivals, and design. Their green-striped surface is now iconic, and their color palette is often used in digital aesthetics and summer promotions.</p>
+            <h3 class="text-lg font-semibold mb-1">Fun Facts</h3>
+            <p>Seedless watermelons are a genetic marvel. A single watermelon is about 92% water. The largest watermelon ever grown weighed over 150 pounds.</p>
           </div>
         `;
       }
@@ -125,3 +133,4 @@
   </script>
 </body>
 </html>
+
