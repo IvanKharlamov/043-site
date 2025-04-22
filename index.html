@@ -77,8 +77,7 @@
 
     function initCards() {
       container.innerHTML = '';
-      cardElements = [];
-      members.forEach((member, index) => {
+      cardElements = members.map((member, index) => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -87,29 +86,31 @@
           </div>
         `;
         container.appendChild(card);
-        cardElements.push(card);
+        return card;
       });
-      updateActiveCard(true);
+      updateActiveCard();
     }
 
-    function updateActiveCard(initial = false) {
+    function updateActiveCard() {
       cardElements.forEach((card, index) => {
         card.classList.remove('active');
         const position = (index - currentIndex) * 60 + 120;
-        card.style.display = 'block';
         card.style.top = `${position}px`;
+        card.style.display = 'block';
       });
-      cardElements[currentIndex].classList.add('active');
 
-      const member = members[currentIndex];
-      description.innerHTML = `
-        <div>
-          <h2 class="text-2xl font-bold mb-2">${member.name}</h2>
-          <p class="text-sm text-gray-400 mb-1">${member.area}</p>
-          <p class="text-sm text-gray-500 italic mb-2">Уровень ${member.level}</p>
-          <p>${member.text}</p>
-        </div>
-      `;
+      if (cardElements[currentIndex]) {
+        cardElements[currentIndex].classList.add('active');
+        const m = members[currentIndex];
+        description.innerHTML = `
+          <div>
+            <h2 class="text-2xl font-bold mb-2">${m.name}</h2>
+            <p class="text-sm text-gray-400 mb-1">${m.area}</p>
+            <p class="text-sm text-gray-500 italic mb-2">Уровень ${m.level}</p>
+            <p>${m.text}</p>
+          </div>
+        `;
+      }
     }
 
     function nextCard() {
