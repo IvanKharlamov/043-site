@@ -7,11 +7,15 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
+body {
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 4px 4px;
+  background-blend-mode: overlay;
+  font-family: 'IBM Plex Mono', monospace;
+}
 .fade-transition {
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.line-entry.active {
-  transform: scale(1.15);
 @keyframes fadeInActive {
   0% {
     opacity: 0;
@@ -22,16 +26,29 @@
     transform: scale(1);
   }
 }
-body {
-  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
-  background-size: 4px 4px;
-  background-blend-mode: overlay;
-  font-family: 'IBM Plex Mono', monospace;
+@keyframes flicker {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
-.fadein { opacity: 0; animation: fadeInCard 0.3s ease forwards; }
-@keyframes fadeInCard {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes pulseLine {
+  0%, 100% { stroke: #fff; }
+  50% { stroke: #ccc; }
+}
+@keyframes floatLines {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+.animate-flicker {
+  animation: flicker 1.6s infinite ease-in-out;
+}
+.delay-100 { animation-delay: 0.2s; }
+.delay-200 { animation-delay: 0.4s; }
+.delay-300 { animation-delay: 0.6s; }
+.animate-pulse-line {
+  animation: pulseLine 2.5s infinite;
+}
+.animate-float-lines {
+  animation: floatLines 5s ease-in-out infinite;
 }
 #line-container {
   position: relative;
@@ -58,6 +75,8 @@ body {
   background-color: #1f2937;
   opacity: 1;
   height: 180px;
+  transform: scale(1.15);
+  animation: fadeInActive 0.6s ease forwards;
 }
 .line-entry img {
   display: none;
@@ -65,55 +84,22 @@ body {
   height: 100%;
   object-fit: cover;
   border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
-
-  border: 1px solid rgba(255, 255, 255, 0.15);}
-
-
-
-
-  20%, 24%, 55% {
-    opacity: 0.6;
-  }
+.line-entry.active img {
+  display: block;
 }
-  
-@keyframes flicker {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-.animate-flicker {
-  animation: flicker 1.6s infinite ease-in-out;
-}
-.delay-100 { animation-delay: 0.2s; }
-.delay-200 { animation-delay: 0.4s; }
-.delay-300 { animation-delay: 0.6s; }
-
-@keyframes pulseLine {
-  0%, 100% { stroke: #fff; }
-  50% { stroke: #ccc; }
-}
-.animate-pulse-line {
-  animation: pulseLine 2.5s infinite;
-}
-
-@keyframes floatLines {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-3px); }
-}
-.animate-float-lines {
-  animation: floatLines 5s ease-in-out infinite;
-}
-$1
+  </style>
 </head>
 <body class="bg-black text-white">
   <header class="sticky top-0 z-50 bg-black w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md">
     <div class="text-white font-bold">043</div>
     <nav class="flex items-center gap-8">
       <a href="#" class="text-gray-300 hover:text-white transition">read&watch</a>
-      <a href="#" class="hover:text-gray-400 transition">radio</a>
-      <a href="#" class="hover:text-gray-400 transition">about</a>
-      <a href="#" class="hover:text-gray-400 transition">shop</a>
-      <a href="#" class="hover:text-gray-400 transition">my 043</a>
+      <a href="#" class="text-gray-300 hover:text-white transition">radio</a>
+      <a href="#" class="text-gray-300 hover:text-white transition">about</a>
+      <a href="#" class="text-gray-300 hover:text-white transition">shop</a>
+      <a href="#" class="text-gray-300 hover:text-white transition">my 043</a>
     </nav>
   </header>
   <h1 class="text-5xl font-bold mt-24 mb-16 mx-auto font-mono uppercase tracking-wider text-yellow-100">Dossier Archive</h1>
@@ -121,20 +107,18 @@ $1
     <div id="line-container" class="relative">
       <!-- Lines injected here -->
     </div>
-    $1
-      <svg id="connection-lines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 animate-float-lines" xmlns="http://www.w3.org/2000/svg">
-  <line x1="100" y1="120" x2="300" y2="180" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
-  <line x1="100" y1="240" x2="280" y2="310" stroke="#888" stroke-width="1" class="animate-pulse-line" />
-  <circle cx="100" cy="120" r="3" fill="#fff" class="animate-flicker" />
-  <circle cx="300" cy="180" r="3" fill="#aaa" class="animate-flicker delay-100" />
-  <circle cx="100" cy="240" r="3" fill="#aaa" class="animate-flicker delay-200" />
-  <circle cx="280" cy="310" r="3" fill="#aaa" class="animate-flicker delay-300" />
-</svg>
-
+    <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
       <!-- Text will be injected here -->
+      <svg id="connection-lines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 animate-float-lines" xmlns="http://www.w3.org/2000/svg">
+        <line x1="100" y1="120" x2="300" y2="180" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
+        <line x1="100" y1="240" x2="280" y2="310" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
+        <circle cx="100" cy="120" r="3" fill="#fff" class="animate-flicker" />
+        <circle cx="300" cy="180" r="3" fill="#fff" class="animate-flicker delay-100" />
+        <circle cx="100" cy="240" r="3" fill="#fff" class="animate-flicker delay-200" />
+        <circle cx="280" cy="310" r="3" fill="#fff" class="animate-flicker delay-300" />
+      </svg>
     </div>
   </div>
-
   <script>
     let members = [];
     let currentIndex = 0;
