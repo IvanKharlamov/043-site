@@ -86,15 +86,21 @@ function initNetworkVisualization() {
   // Add CSS for transitions
   const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
   style.textContent = `
-    circle, line {
+    circle {
       transition: cx 0.8s cubic-bezier(0.4, 0, 0.2, 1),
                   cy 0.8s cubic-bezier(0.4, 0, 0.2, 1),
                   r 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.4s ease,
-                  x1 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  y1 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  x2 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-                  y2 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                  opacity 0.4s ease;
+    }
+    line {
+      transition: opacity 0.4s ease;
+    }
+    .animate-blink {
+      animation: blink 3s infinite alternate;
+    }
+    @keyframes blink {
+      0%, 80% { opacity: 0.5; }
+      100% { opacity: 1; }
     }
   `;
   networkSvg.appendChild(style);
@@ -142,24 +148,24 @@ function calculateNetworkPositions(member) {
     const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
     const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
     
-    // Calculate radius based on seed
+    // Calculate radius based on seed - MULTIPLIED BY 5
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
     const sizeVariation = sizeSeed % 100;
-    const radius = sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
+    const radius = (sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
                    sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
-                   2.5 + (sizeVariation % 4) * 0.75;
+                   2.5 + (sizeVariation % 4) * 0.75) * 5; // Multiplied by 5
     
     // Add opacity variation
     const opacity = 0.6 + (sizeSeed % 5) * 0.08;
     
-    // Add point data
+    // Add point data - now only using blink animation
     points.push({ 
       x, 
       y, 
       radius, 
       opacity,
       id: `point-${i}`,
-      animClass: i % 3 === 0 ? 'animate-flicker' : 'float-point'
+      animClass: 'animate-blink' // Only blink animation
     });
   }
   
@@ -192,76 +198,22 @@ function calculateNetworkPositions(member) {
 function updateNetworkVisualization(member) {
   const { points, connections } = calculateNetworkPositions(member);
   const existingNodes = {};
-  const existingConnections = {};
   
-  // First iteration - handle transitions for existing nodes
-  if (prevPoints.length > 0) {
-    // Store existing elements
-    const circles = networkSvg.querySelectorAll('circle');
-    const lines = networkSvg.querySelectorAll('line');
-    
-    // Map existing circles by ID
-    circles.forEach(circle => {
-      existingNodes[circle.getAttribute('data-id')] = circle;
-    });
-    
-    // Map existing lines by ID
-    lines.forEach(line => {
-      existingConnections[line.getAttribute('data-id')] = line;
-    });
-    
-    // Remove connections that won't be reused
-    lines.forEach(line => {
-      const lineId = line.getAttribute('data-id');
-      const connectionExists = false;
-      if (!connectionExists) {
-        // Fade out and remove
-        line.style.opacity = 0;
-        setTimeout(() => {
-          if (line.parentNode) {
-            line.parentNode.removeChild(line);
-          }
-        }, 800); // Match the transition duration
-      }
-    });
-  }
-
-  // Create/update connections
-  connections.forEach((conn, index) => {
-    let line;
-    
-    if (existingConnections[conn.id]) {
-      // Update existing connection
-      line = existingConnections[conn.id];
-      
-      // Animate to new position with proper transitions
-      line.setAttribute('x1', conn.x1);
-      line.setAttribute('y1', conn.y1);
-      line.setAttribute('x2', conn.x2);
-      line.setAttribute('y2', conn.y2);
-    } else {
-      // Create new connection
-      line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', conn.x1);
-      line.setAttribute('y1', conn.y1);
-      line.setAttribute('x2', conn.x2);
-      line.setAttribute('y2', conn.y2);
-      line.setAttribute('stroke', '#fff');
-      line.setAttribute('stroke-width', '0.2');
-      line.setAttribute('class', 'animate-draw-line');
-      line.setAttribute('style', `animation-delay: ${index * 0.02}s; opacity: 0;`);
-      line.setAttribute('data-id', conn.id);
-      
-      networkSvg.appendChild(line);
-      
-      // Fade in
-      setTimeout(() => {
-        line.style.opacity = 1;
-      }, 10);
+  // First, remove all existing lines immediately when changing profiles
+  const lines = networkSvg.querySelectorAll('line');
+  lines.forEach(line => {
+    if (line.parentNode) {
+      line.parentNode.removeChild(line);
     }
   });
+  
+  // Store existing elements for dots
+  const circles = networkSvg.querySelectorAll('circle');
+  circles.forEach(circle => {
+    existingNodes[circle.getAttribute('data-id')] = circle;
+  });
 
-  // Create/update points
+  // Create/update points first
   points.forEach((point, index) => {
     let circle;
     
@@ -269,8 +221,7 @@ function updateNetworkVisualization(member) {
       // Update existing node
       circle = existingNodes[point.id];
       
-      // Animate to new position - use direct attribute changes
-      // for proper CSS transition animation
+      // Animate to new position
       circle.setAttribute('cx', point.x);
       circle.setAttribute('cy', point.y);
       circle.setAttribute('r', point.radius);
@@ -311,6 +262,30 @@ function updateNetworkVisualization(member) {
       }
     });
   }
+  
+  // Add a delay before creating connections - wait for dots to move
+  setTimeout(() => {
+    // Create connections with more prominence
+    connections.forEach((conn, index) => {
+      // Create new connection
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', conn.x1);
+      line.setAttribute('y1', conn.y1);
+      line.setAttribute('x2', conn.x2);
+      line.setAttribute('y2', conn.y2);
+      line.setAttribute('stroke', '#fff');
+      line.setAttribute('stroke-width', '1'); // Increased from 0.2 to 1 for prominence
+      line.setAttribute('data-id', conn.id);
+      line.setAttribute('style', 'opacity: 0;');
+      
+      networkSvg.appendChild(line);
+      
+      // Fade in with delay
+      setTimeout(() => {
+        line.style.opacity = 0.8; // Increased from default for more prominence
+      }, index * 20); // Sequential appearance
+    });
+  }, 800); // Wait for dots to move first
   
   // Update stored data for next transition
   prevPoints = [...points];
