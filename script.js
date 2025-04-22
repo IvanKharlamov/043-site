@@ -83,6 +83,22 @@ function initNetworkVisualization() {
   networkSvg.setAttribute('class', 'w-full h-full');
   networkSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   
+  // Add CSS for transitions
+  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  style.textContent = `
+    circle, line {
+      transition: cx 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  cy 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  r 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.4s ease,
+                  x1 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  y1 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  x2 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+                  y2 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  `;
+  networkSvg.appendChild(style);
+  
   // Append SVG to container
   networkOverlay.appendChild(networkSvg);
   
@@ -90,8 +106,12 @@ function initNetworkVisualization() {
   updateNetworkVisualization(members[currentIndex]);
 }
 
-// Update the network visualization based on member data
-function updateNetworkVisualization(member) {
+// Store previous visualization data to enable smooth transitions
+let prevPoints = [];
+let prevConnections = [];
+
+// Calculate positions for network nodes
+function calculateNetworkPositions(member) {
   const memberId = member.id;
   const memberName = member.name;
   const memberSince = member.since;
@@ -99,11 +119,6 @@ function updateNetworkVisualization(member) {
   
   // Generate a more varied seed based on multiple member properties
   const baseSeed = simpleHash(memberId + memberName + memberSince);
-  
-  // Clear previous points and lines
-  while (networkSvg.firstChild) {
-    networkSvg.removeChild(networkSvg.firstChild);
-  }
   
   // Number of points to generate (40-60)
   const pointCount = 40 + Math.floor((baseSeed % 1000) / 1000 * 20);
@@ -127,12 +142,30 @@ function updateNetworkVisualization(member) {
     const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
     const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
     
-    points.push({ x, y });
+    // Calculate radius based on seed
+    const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
+    const sizeVariation = sizeSeed % 100;
+    const radius = sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
+                   sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
+                   2.5 + (sizeVariation % 4) * 0.75;
+    
+    // Add opacity variation
+    const opacity = 0.6 + (sizeSeed % 5) * 0.08;
+    
+    // Add point data
+    points.push({ 
+      x, 
+      y, 
+      radius, 
+      opacity,
+      id: `point-${i}`,
+      animClass: i % 3 === 0 ? 'animate-flicker' : 'float-point'
+    });
   }
   
   // Generate connections between points
   const connections = [];
-  const connectionCount = Math.floor(pointCount * 0.75); // Increase connections to 75%
+  const connectionCount = Math.floor(pointCount * 0.75);
   
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
@@ -146,47 +179,145 @@ function updateNetworkVisualization(member) {
         x1: points[startIndex].x,
         y1: points[startIndex].y,
         x2: points[connectToIndex].x,
-        y2: points[connectToIndex].y
+        y2: points[connectToIndex].y,
+        id: `connection-${i}`
       });
     }
   }
   
-  // Create SVG elements with staggered animations
-  connections.forEach((conn, index) => {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', conn.x1);
-    line.setAttribute('y1', conn.y1);
-    line.setAttribute('x2', conn.x2);
-    line.setAttribute('y2', conn.y2);
-    line.setAttribute('stroke', '#fff');
-    line.setAttribute('stroke-width', '0.2');
-    line.setAttribute('class', 'animate-draw-line');
-    line.setAttribute('style', `animation-delay: ${index * 0.02}s`);
+  return { points, connections };
+}
+
+// Update the network visualization based on member data
+function updateNetworkVisualization(member) {
+  const { points, connections } = calculateNetworkPositions(member);
+  const existingNodes = {};
+  const existingConnections = {};
+  
+  // First iteration - handle transitions for existing nodes
+  if (prevPoints.length > 0) {
+    // Store existing elements
+    const circles = networkSvg.querySelectorAll('circle');
+    const lines = networkSvg.querySelectorAll('line');
     
-    networkSvg.appendChild(line);
+    // Map existing circles by ID
+    circles.forEach(circle => {
+      existingNodes[circle.getAttribute('data-id')] = circle;
+    });
+    
+    // Map existing lines by ID
+    lines.forEach(line => {
+      existingConnections[line.getAttribute('data-id')] = line;
+    });
+    
+    // Remove connections that won't be reused
+    lines.forEach(line => {
+      const lineId = line.getAttribute('data-id');
+      const connectionExists = connections.some(conn => conn.id === lineId);
+      if (!connectionExists) {
+        // Fade out and remove
+        line.style.opacity = 0;
+        setTimeout(() => {
+          if (line.parentNode) {
+            line.parentNode.removeChild(line);
+          }
+        }, 400);
+      }
+    });
+  }
+
+  // Create/update connections
+  connections.forEach((conn, index) => {
+    let line;
+    
+    if (existingConnections[conn.id]) {
+      // Update existing connection
+      line = existingConnections[conn.id];
+      
+      // Animate to new position
+      setTimeout(() => {
+        line.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        line.setAttribute('x1', conn.x1);
+        line.setAttribute('y1', conn.y1);
+        line.setAttribute('x2', conn.x2);
+        line.setAttribute('y2', conn.y2);
+      }, index * 5);
+    } else {
+      // Create new connection
+      line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', conn.x1);
+      line.setAttribute('y1', conn.y1);
+      line.setAttribute('x2', conn.x2);
+      line.setAttribute('y2', conn.y2);
+      line.setAttribute('stroke', '#fff');
+      line.setAttribute('stroke-width', '0.2');
+      line.setAttribute('class', 'animate-draw-line');
+      line.setAttribute('style', `animation-delay: ${index * 0.02}s; opacity: 0;`);
+      line.setAttribute('data-id', conn.id);
+      
+      networkSvg.appendChild(line);
+      
+      // Fade in
+      setTimeout(() => {
+        line.style.opacity = 1;
+      }, 10);
+    }
+  });
+
+  // Create/update points
+  points.forEach((point, index) => {
+    let circle;
+    
+    if (existingNodes[point.id] && index < prevPoints.length) {
+      // Update existing node
+      circle = existingNodes[point.id];
+      
+      // Animate to new position
+      setTimeout(() => {
+        circle.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+        circle.setAttribute('cx', point.x);
+        circle.setAttribute('cy', point.y);
+        circle.setAttribute('r', point.radius);
+      }, index * 5);
+    } else {
+      // Create new node
+      circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', point.x);
+      circle.setAttribute('cy', point.y);
+      circle.setAttribute('r', point.radius);
+      circle.setAttribute('fill', '#fff');
+      circle.setAttribute('class', point.animClass);
+      circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: 0; transition: opacity 0.4s ease;`);
+      circle.setAttribute('data-id', point.id);
+      
+      networkSvg.appendChild(circle);
+      
+      // Fade in
+      setTimeout(() => {
+        circle.style.opacity = point.opacity;
+      }, 10 + index * 5);
+    }
   });
   
-  points.forEach((point, index) => {
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', point.x);
-    circle.setAttribute('cy', point.y);
+  // Remove nodes that aren't needed anymore
+  if (prevPoints.length > 0) {
+    const currentIds = points.map(p => p.id);
     
-    // Make dot sizes more varied using different seeds
-    const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${index}`);
-    const sizeVariation = sizeSeed % 100;
-    // More varied dot sizes with occasional larger ones
-    const radius = sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
-                  sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
-                  2.5 + (sizeVariation % 4) * 0.75;
-    
-    circle.setAttribute('r', radius);
-    circle.setAttribute('fill', '#fff');
-    
-    // Vary animation styles based on index
-    const animClass = index % 3 === 0 ? 'animate-flicker' : 'float-point';
-    circle.setAttribute('class', animClass);
-    circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: ${0.6 + (sizeSeed % 5) * 0.08}`);
-    
-    networkSvg.appendChild(circle);
-  });
+    Object.keys(existingNodes).forEach(id => {
+      if (!currentIds.includes(id)) {
+        const circle = existingNodes[id];
+        // Fade out and remove
+        circle.style.opacity = 0;
+        setTimeout(() => {
+          if (circle.parentNode) {
+            circle.parentNode.removeChild(circle);
+          }
+        }, 400);
+      }
+    });
+  }
+  
+  // Update stored data for next transition
+  prevPoints = [...points];
+  prevConnections = [...connections];
 }
