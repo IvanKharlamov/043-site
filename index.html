@@ -4,15 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>043 Members Gallery</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+    }
+  </style>
   <style>
     #card-container {
       position: relative;
       height: 400px;
       width: 320px;
       overflow: visible;
-      margin-left: -80px;
-      margin-top: -60px;
+      margin-left: 0;
+      margin-top: 0;
     }
     .card {
       position: absolute;
@@ -48,12 +54,12 @@
   </style>
 </head>
 <body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
-  <h1 class="text-3xl font-bold mb-8 self-center">Участники 043</h1>
+  <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
     <div id="card-container" class="relative">
       <!-- Cards will be injected here -->
     </div>
-    <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed mt-[80px]">
+    <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
       <!-- Text will be injected here -->
     </div>
   </div>
@@ -104,11 +110,12 @@
       if (cardElements[currentIndex]) {
         cardElements[currentIndex].classList.add('active');
         const m = members[currentIndex];
+        const id = m.id || (m.name === 'Dasha' ? '00000049' : m.name === 'Narek' ? '00000058' : '00000043');
         description.innerHTML = `
           <div class="mb-4">
             <h2 class="text-2xl font-bold mb-1 tracking-wide uppercase">${m.name}</h2>
             <p class="text-sm text-gray-400 mb-1">${m.area}</p>
-            <p class="text-sm text-gray-500 italic mb-1">ID: ${m.id || '00000043'}</p>
+            <p class="text-sm text-gray-500 italic mb-1">ID: ${id}</p>
             <p class="text-xs text-gray-400 uppercase mb-4">Member since ${m.since || '2022'}</p>
             <h3 class="text-lg font-semibold mb-1">About</h3>
             <p class="mb-4">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice.</p>
