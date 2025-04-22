@@ -100,8 +100,8 @@ function updateNetworkVisualization(memberId) {
     networkSvg.removeChild(networkSvg.firstChild);
   }
   
-  // Number of points to generate (20-30)
-  const pointCount = 20 + Math.floor(seed * 10);
+  // Number of points to generate (40-60)
+  const pointCount = 40 + Math.floor(seed * 20);
   
   // Generate points with positions influenced by the hash
   const points = [];
@@ -120,7 +120,7 @@ function updateNetworkVisualization(memberId) {
   
   // Generate connections between points
   const connections = [];
-  const connectionCount = Math.floor(pointCount * 0.7); // About 70% of points will have connections
+  const connectionCount = Math.floor(pointCount * 0.5); // About 50% of points will have connections
   
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
@@ -146,9 +146,9 @@ function updateNetworkVisualization(memberId) {
     line.setAttribute('x2', conn.x2);
     line.setAttribute('y2', conn.y2);
     line.setAttribute('stroke', '#fff');
-    line.setAttribute('stroke-width', '0.3');
+    line.setAttribute('stroke-width', '0.2');
     line.setAttribute('class', 'animate-draw-line');
-    line.setAttribute('style', `animation-delay: ${index * 0.05}s`);
+    line.setAttribute('style', `animation-delay: ${index * 0.02}s`);
     
     networkSvg.appendChild(line);
   });
@@ -157,10 +157,15 @@ function updateNetworkVisualization(memberId) {
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', point.x);
     circle.setAttribute('cy', point.y);
-    circle.setAttribute('r', 3 + (simpleHash(`${memberId}-size-${index}`) % 5)); // Variable size between 3-7
+    
+    // Make most dots very small with occasional larger ones
+    const sizeVariation = simpleHash(`${memberId}-size-${index}`) % 100;
+    const radius = sizeVariation < 85 ? 1 + (sizeVariation % 2) : 3 + (sizeVariation % 4);
+    
+    circle.setAttribute('r', radius);
     circle.setAttribute('fill', '#fff');
     circle.setAttribute('class', 'animate-flicker float-point');
-    circle.setAttribute('style', `animation-delay: ${index * 0.1}s`);
+    circle.setAttribute('style', `animation-delay: ${index * 0.05}s`);
     
     networkSvg.appendChild(circle);
   });

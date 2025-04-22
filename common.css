@@ -136,8 +136,33 @@ body {
 
 #network-overlay line {
   transition: all 1.2s ease;
+  opacity: 0.6;
 }
 
 #network-overlay circle {
   transition: all 0.8s ease;
+}
+
+/* Adjust animation speeds */
+@keyframes flicker {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes floatDot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes drawLine {
+  0% {
+    stroke-dasharray: 0, 300;
+    stroke-dashoffset: 300;
+    opacity: 0;
+  }
+  100% {
+    stroke-dasharray: 300, 0;
+    stroke-dashoffset: 0;
+    opacity: 0.5;
+  }
 }
