@@ -76,7 +76,34 @@ $1
     opacity: 0.6;
   }
 }
-  </style>
+  
+@keyframes flicker {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.animate-flicker {
+  animation: flicker 1.6s infinite ease-in-out;
+}
+.delay-100 { animation-delay: 0.2s; }
+.delay-200 { animation-delay: 0.4s; }
+.delay-300 { animation-delay: 0.6s; }
+
+@keyframes pulseLine {
+  0%, 100% { stroke: #fff; }
+  50% { stroke: #ccc; }
+}
+.animate-pulse-line {
+  animation: pulseLine 2.5s infinite;
+}
+
+@keyframes floatLines {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+.animate-float-lines {
+  animation: floatLines 5s ease-in-out infinite;
+}
+$1
 </head>
 <body class="bg-black text-white">
   <header class="sticky top-0 z-50 bg-black w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md">
@@ -95,14 +122,15 @@ $1
       <!-- Lines injected here -->
     </div>
     $1
-      <svg id="connection-lines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" xmlns="http://www.w3.org/2000/svg">
-        <line x1="100" y1="120" x2="300" y2="180" stroke="#555" stroke-width="1" />
-        <line x1="100" y1="240" x2="280" y2="310" stroke="#555" stroke-width="1" />
-        <circle cx="100" cy="120" r="3" fill="#888" />
-        <circle cx="300" cy="180" r="3" fill="#888" />
-        <circle cx="100" cy="240" r="3" fill="#888" />
-        <circle cx="280" cy="310" r="3" fill="#888" />
-      </svg>
+      <svg id="connection-lines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0 animate-float-lines" xmlns="http://www.w3.org/2000/svg">
+  <line x1="100" y1="120" x2="300" y2="180" stroke="#fff" stroke-width="1" class="animate-pulse-line" />
+  <line x1="100" y1="240" x2="280" y2="310" stroke="#888" stroke-width="1" class="animate-pulse-line" />
+  <circle cx="100" cy="120" r="3" fill="#fff" class="animate-flicker" />
+  <circle cx="300" cy="180" r="3" fill="#aaa" class="animate-flicker delay-100" />
+  <circle cx="100" cy="240" r="3" fill="#aaa" class="animate-flicker delay-200" />
+  <circle cx="280" cy="310" r="3" fill="#aaa" class="animate-flicker delay-300" />
+</svg>
+
       <!-- Text will be injected here -->
     </div>
   </div>
