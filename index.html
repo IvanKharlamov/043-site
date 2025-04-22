@@ -7,187 +7,148 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
+body {
+  background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 4px 4px;
+  background-blend-mode: overlay;
+  font-family: 'IBM Plex Mono', monospace;
+}
 .fadein { opacity: 0; animation: fadeInCard 0.3s ease forwards; }
 @keyframes fadeInCard {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-
-    body {
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    #card-container {
-      position: relative;
-      height: 400px;
-      width: 320px;
-      overflow: visible;
-      margin-left: 40px;
-      margin-top: 0;
-    }
-    .card {
-      position: absolute;
-      left: 0;
-      transition: filter 0.8s ease, background-color 0.8s ease;
-      z-index: 1;
-      width: 300px;
-      border-radius: 0.25rem;
-      background-color: #4b5563;
-      opacity: 0.4;
-      transform: scaleY(0.25);
-      transition: all 0.4s ease;
-      height: 30px;
-    }
-    .card.active {
-      height: 180px;
-      opacity: 1;
-      z-index: 10;
-      transform: scale(1);
-      background-color: #1f2937;
-    }
-    .card .card-content {
-      display: none;
-    }
-    .card.active .card-content {
-      display: block;
-    }
-    .card.active .card-content img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 0.25rem;
-    }
-
-    .glitch-text {
-      position: relative;
-      color: white;
-      animation: flicker 3s infinite linear;
-    }
-    .glitch-text::after {
-      content: attr(data-text);
-      position: absolute;
-      left: 2px;
-      top: 0;
-      color: #ff00c8;
-      opacity: 0.8;
-      clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-    }
-    .glitch-text::before {
-      content: attr(data-text);
-      position: absolute;
-      left: -2px;
-      top: 0;
-      color: #00fff9;
-      opacity: 0.8;
-      clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
-    }
-
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-        opacity: 1;
-      }
-      20%, 24%, 55% {
-        opacity: 0.6;
-      }
-    }
+#line-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 40px;
+  margin-top: 0;
+}
+.line-entry {
+  width: 300px;
+  height: 18px;
+  background-color: #9ca3af;
+  border-radius: 0.25rem;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.line-entry:hover {
+  opacity: 1;
+  background-color: #d1d5db;
+}
+.line-entry.active {
+  background-color: #1f2937;
+  opacity: 1;
+  height: 180px;
+}
+.line-entry img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+.line-entry.active img {
+  display: block;
+}
+.glitch-text {
+  position: relative;
+  color: white;
+  animation: flicker 3s infinite linear;
+}
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  top: 0;
+  color: #ff00c8;
+  opacity: 0.8;
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  animation: flicker 2s infinite alternate;
+}
+.glitch-text::before {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  top: 0;
+  color: #00fff9;
+  opacity: 0.8;
+  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+  animation: flicker 2s infinite alternate;
+}
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    opacity: 0.6;
+  }
+}
   </style>
 </head>
 <body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
   <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest glitch-text" data-text="Dossier Archive">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
-    <div id="card-container" class="relative">
-      <!-- Cards will be injected here -->
+    <div id="line-container" class="relative">
+      <!-- Lines injected here -->
     </div>
     <div id="member-description" class="max-w-xl text-gray-300 text-base leading-relaxed self-start mt-[80px]">
       <!-- Text will be injected here -->
     </div>
   </div>
-  <div class="mt-6 flex gap-4 self-center">
-    <button onclick="prevCard()" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-300">↑</button>
-    <button onclick="nextCard()" class="px-4 py-2 bg-white text-black rounded hover:bg-gray-300">↓</button>
-  </div>
 
   <script>
     let members = [];
+    let currentIndex = 0;
+    const container = document.getElementById('line-container');
+    const description = document.getElementById('member-description');
 
     fetch('members.json')
       .then(res => res.json())
       .then(data => {
         members = data;
-        initCards();
+        renderLines();
+        updateActiveEntry();
       });
 
-    let currentIndex = 0;
-    const container = document.getElementById('card-container');
-    const description = document.getElementById('member-description');
-    let cardElements = [];
-
-    function initCards() {
+    function renderLines() {
       container.innerHTML = '';
-      cardElements = members.map((member, index) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.addEventListener('click', () => {
+      members.forEach((member, index) => {
+        const entry = document.createElement('div');
+        entry.className = 'line-entry';
+        entry.innerHTML = `<img src="${member.img}" alt="${member.name}">`;
+        entry.addEventListener('click', () => {
           currentIndex = index;
-          updateActiveCard();
+          updateActiveEntry();
         });
-        card.addEventListener('mouseenter', () => {
-          if (!card.classList.contains('active')) {
-            card.style.opacity = '0.6';
-          }
-        });
-        card.addEventListener('mouseleave', () => {
-          if (!card.classList.contains('active')) {
-            card.style.opacity = '0.4';
-          }
-        });
-        card.innerHTML = `
-          <div class="card-content">
-            <img src="${member.img}" alt="${member.name}">
-          </div>
-        `;
-        container.appendChild(card);
-        return card;
+        container.appendChild(entry);
       });
-      updateActiveCard();
     }
 
-    function updateActiveCard() {
-      cardElements.forEach((card, index) => {
-        card.classList.remove('active'); card.classList.remove('fadein');
-        const position = (index - currentIndex) * 60 + 120;
-        card.style.top = `${position}px`;
-        card.style.display = 'block';
+    function updateActiveEntry() {
+      Array.from(container.children).forEach((entry, index) => {
+        entry.classList.toggle('active', index === currentIndex);
       });
 
-      if (cardElements[currentIndex]) {
-        cardElements[currentIndex].classList.add('active'); cardElements[currentIndex].classList.add('fadein');
-        const m = members[currentIndex];
-        const id = m.id || (m.name === 'Dasha' ? '00000049' : m.name === 'Narek' ? '00000058' : '00000043');
-        description.innerHTML = `
-          <div class="mb-4">
-            <h2 class="text-2xl font-bold mb-1 tracking-wide uppercase">${m.name}</h2>
-            <p class="text-sm text-gray-400 mb-1">${m.area}</p>
-            <p class="text-sm text-gray-500 italic mb-1">ID: ${id}</p>
-            <p class="text-xs text-gray-400 uppercase mb-4">Member since ${m.since || '2022'}</p>
-            <h3 class="text-lg font-semibold mb-1">About</h3>
-            <p class="mb-4">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice.</p>
-            <h3 class="text-lg font-semibold mb-1">Cultural Relevance</h3>
-            <p class="mb-4">In some parts of the world, watermelons are used in ceremonies, festivals, and design. Their green-striped surface is now iconic, and their color palette is often used in digital aesthetics and summer promotions.</p>
-            <h3 class="text-lg font-semibold mb-1">Fun Facts</h3>
-            <p>Seedless watermelons are a genetic marvel. A single watermelon is about 92% water. The largest watermelon ever grown weighed over 150 pounds.</p>
-          </div>
-        `;
-      }
-    }
-
-    function nextCard() {
-      currentIndex = (currentIndex + 1) % members.length;
-      updateActiveCard();
-    }
-
-    function prevCard() {
-      currentIndex = (currentIndex - 1 + members.length) % members.length;
-      updateActiveCard();
+      const m = members[currentIndex];
+      const id = m.id || (m.name === 'Dasha' ? '00000049' : m.name === 'Narek' ? '00000058' : '00000043');
+      description.innerHTML = `
+        <div class="mb-4">
+          <h2 class="text-2xl font-bold mb-1 tracking-wide uppercase">${m.name}</h2>
+          <p class="text-sm text-gray-400 mb-1">${m.area}</p>
+          <p class="text-sm text-gray-500 italic mb-1">ID: ${id}</p>
+          <p class="text-xs text-gray-400 uppercase mb-4">Member since ${m.since || '2022'}</p>
+          <h3 class="text-lg font-semibold mb-1">About</h3>
+          <p class="mb-4">Watermelons are round, juicy, and best served cold. They come in many varieties, each with its own texture and sweetness. In the summer, they symbolize gatherings, sticky fingers, and the hunt for the ripest slice.</p>
+          <h3 class="text-lg font-semibold mb-1">Cultural Relevance</h3>
+          <p class="mb-4">In some parts of the world, watermelons are used in ceremonies, festivals, and design. Their green-striped surface is now iconic, and their color palette is often used in digital aesthetics and summer promotions.</p>
+          <h3 class="text-lg font-semibold mb-1">Fun Facts</h3>
+          <p>Seedless watermelons are a genetic marvel. A single watermelon is about 92% water. The largest watermelon ever grown weighed over 150 pounds.</p>
+        </div>
+      `;
     }
   </script>
 </body>
