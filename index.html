@@ -7,11 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
-.card.transitioning {
-  transition: all 0.3s ease;
-  transform: scale(1.02);
-  opacity: 0.8;
-}
+
     body {
       font-family: 'IBM Plex Mono', monospace;
     }
@@ -137,18 +133,14 @@
 
     function updateActiveCard() {
       cardElements.forEach((card, index) => {
-        card.classList.remove('active'); card.classList.remove('transitioning');
+        card.classList.remove('active');
         const position = (index - currentIndex) * 60 + 120;
         card.style.top = `${position}px`;
         card.style.display = 'block';
       });
 
       if (cardElements[currentIndex]) {
-        cardElements[currentIndex].classList.add('transitioning');
-        setTimeout(() => {
-          cardElements[currentIndex].classList.remove('transitioning');
-          cardElements[currentIndex].classList.add('active');
-        }, 10);
+        cardElements[currentIndex].classList.add('active');
         const m = members[currentIndex];
         const id = m.id || (m.name === 'Dasha' ? '00000049' : m.name === 'Narek' ? '00000058' : '00000043');
         description.innerHTML = `
