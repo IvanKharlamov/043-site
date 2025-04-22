@@ -221,7 +221,7 @@ function updateNetworkVisualization(member) {
           if (line.parentNode) {
             line.parentNode.removeChild(line);
           }
-        }, 400);
+        }, 800); // Match the transition duration
       }
     });
   }
@@ -234,14 +234,11 @@ function updateNetworkVisualization(member) {
       // Update existing connection
       line = existingConnections[conn.id];
       
-      // Animate to new position
-      setTimeout(() => {
-        line.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-        line.setAttribute('x1', conn.x1);
-        line.setAttribute('y1', conn.y1);
-        line.setAttribute('x2', conn.x2);
-        line.setAttribute('y2', conn.y2);
-      }, index * 5);
+      // Animate to new position with proper transitions
+      line.setAttribute('x1', conn.x1);
+      line.setAttribute('y1', conn.y1);
+      line.setAttribute('x2', conn.x2);
+      line.setAttribute('y2', conn.y2);
     } else {
       // Create new connection
       line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -272,13 +269,11 @@ function updateNetworkVisualization(member) {
       // Update existing node
       circle = existingNodes[point.id];
       
-      // Animate to new position
-      setTimeout(() => {
-        circle.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-        circle.setAttribute('cx', point.x);
-        circle.setAttribute('cy', point.y);
-        circle.setAttribute('r', point.radius);
-      }, index * 5);
+      // Animate to new position - use direct attribute changes
+      // for proper CSS transition animation
+      circle.setAttribute('cx', point.x);
+      circle.setAttribute('cy', point.y);
+      circle.setAttribute('r', point.radius);
     } else {
       // Create new node
       circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -287,7 +282,7 @@ function updateNetworkVisualization(member) {
       circle.setAttribute('r', point.radius);
       circle.setAttribute('fill', '#fff');
       circle.setAttribute('class', point.animClass);
-      circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: 0; transition: opacity 0.4s ease;`);
+      circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: 0;`);
       circle.setAttribute('data-id', point.id);
       
       networkSvg.appendChild(circle);
@@ -312,7 +307,7 @@ function updateNetworkVisualization(member) {
           if (circle.parentNode) {
             circle.parentNode.removeChild(circle);
           }
-        }, 400);
+        }, 800); // Match the transition duration
       }
     });
   }
