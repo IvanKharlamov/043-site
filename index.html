@@ -8,8 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="common.css">
 </head>
-<body class="bg-black text-white">
-  <header class="sticky top-0 z-50 bg-black bg-opacity-90 w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md">
+<body>
+  <!-- Grid pattern overlay -->
+  <div class="bg-grid-overlay"></div>
+  
+  <header class="sticky top-0 z-50 bg-opacity-90 w-full flex items-center justify-between px-6 py-4 border-b border-gray-800 text-sm font-mono uppercase tracking-wide shadow-md backdrop-blur-md content-container">
     <div class="text-white font-bold">043</div>
     <nav class="flex items-center gap-8">
       <a href="#" class="text-gray-300 hover:text-white transition">read&watch</a>
@@ -21,7 +24,7 @@
   </header>
 
   <div class="relative">
-    <h1 class="text-5xl font-bold mt-24 mb-16 mx-auto font-mono uppercase tracking-wider text-yellow-100 text-center">Dossier Archive</h1>
+    <h1 class="text-5xl font-bold mt-24 mb-16 mx-auto font-mono uppercase tracking-wider text-yellow-100 text-center text-shadow">Dossier Archive</h1>
     
     <!-- Network visualization overlay -->
     <div id="network-overlay" class="fixed top-0 right-0 w-full h-full pointer-events-none z-0 opacity-60">
@@ -30,13 +33,13 @@
     
     <div class="flex flex-row flex-wrap lg:flex-nowrap gap-16 items-start w-full max-w-7xl mx-auto px-6 relative z-10">
       <div class="w-full lg:w-auto">
-        <div class="text-gray-400 text-sm mb-4 uppercase tracking-wider">Select member profile</div>
+        <div class="text-gray-400 text-sm mb-4 uppercase tracking-wider pl-4">Select member profile</div>
         <div id="line-container" class="relative">
           <!-- Lines will be injected here by JavaScript -->
         </div>
       </div>
       
-      <div id="member-description" class="w-full lg:w-auto max-w-xl text-gray-300 text-base leading-relaxed mt-8 lg:mt-16 backdrop-blur-sm bg-black bg-opacity-40 p-6 rounded-md border border-gray-800">
+      <div id="member-description" class="w-full lg:w-auto max-w-xl text-gray-300 text-base leading-relaxed mt-8 lg:mt-16 content-container p-6">
         <!-- Member details will be injected here by JavaScript -->
         <div class="animate-pulse">Loading member data...</div>
       </div>

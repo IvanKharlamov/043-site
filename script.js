@@ -5,6 +5,18 @@ const description = document.getElementById('member-description');
 const networkOverlay = document.getElementById('network-overlay');
 let networkSvg;
 
+// Array of dark color palettes for different members
+const memberPalettes = [
+  // Default dark blue palette
+  ['#0d1321', '#141a26', '#1c1f2b', '#162032'],
+  // Dark purple/midnight palette
+  ['#0f0f1b', '#191631', '#251a40', '#1a1a2e'],
+  // Dark teal/cyan palette
+  ['#0f1e25', '#132029', '#12313b', '#0d252d'],
+  // Dark red/burgundy palette
+  ['#1a0e12', '#230f18', '#2b0f18', '#1e0a0f']
+];
+
 // Fetch the members data from the JSON file
 fetch('members.json')
   .then(res => res.json())
@@ -30,9 +42,22 @@ function renderLines() {
       currentIndex = index;
       updateActiveEntry();
       updateNetworkVisualization(members[currentIndex].id);
+      updateBackgroundGradient(members[currentIndex].id);
     });
     container.appendChild(entry);
   });
+}
+
+// Update the background gradient based on member ID
+function updateBackgroundGradient(memberId) {
+  // Use the member ID hash to select a palette
+  const hash = simpleHash(memberId);
+  const paletteIndex = hash % memberPalettes.length;
+  const selectedPalette = memberPalettes[paletteIndex];
+  
+  // Apply the new gradient
+  document.body.style.background = `linear-gradient(-45deg, ${selectedPalette.join(', ')})`;
+  document.body.style.backgroundSize = '400% 400%';
 }
 
 // Update the currently selected member and display their information
@@ -60,6 +85,9 @@ function updateActiveEntry() {
       <p>${member.facts}</p>
     </div>
   `;
+  
+  // Update background gradient
+  updateBackgroundGradient(member.id);
 }
 
 // Generate a simple hash from a string
