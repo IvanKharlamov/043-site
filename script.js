@@ -120,8 +120,8 @@ function calculateNetworkPositions(member) {
   // Generate a more varied seed based on multiple member properties
   const baseSeed = simpleHash(memberId + memberName + memberSince);
   
-  // Number of points to generate (40-60)
-  const pointCount = 40 + Math.floor((baseSeed % 1000) / 1000 * 20);
+  // Number of points to generate (15-30)
+  const pointCount = 15 + Math.floor((baseSeed % 1000) / 1000 * 15);
   
   // Generate points with positions influenced by the hash
   const points = [];
@@ -165,7 +165,7 @@ function calculateNetworkPositions(member) {
   
   // Generate connections between points
   const connections = [];
-  const connectionCount = Math.floor(pointCount * 0.75);
+  const connectionCount = Math.floor(pointCount * 0.5);
   
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
