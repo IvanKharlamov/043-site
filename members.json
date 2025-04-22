@@ -1,24 +1,9 @@
 [
   {
-    "name": "Dasha",
-    "level": 2,
-    "area": "Визуальный арт",
-    "img": "https://placehold.co/300x180/1e1e1e/ffffff?text=Dasha",
-    "text": "Даша занимается созданием уникальных визуальных решений для сценографии и digital art. Её подход сочетает аналоговые текстуры и генеративные алгоритмы. Она — один из самых ярких представителей постграфического мышления в нашей команде."
-  },
-  {
-    "name": "Narek",
+    "name": "Ewan",
     "level": 3,
-    "area": "Музыка",
-    "img": "https://placehold.co/300x180/1e1e1e/ffffff?text=Narek",
-    "text": "Нарек — продюсер и перформер, который работает на стыке эмбиента и индустриального техно. Он отвечает за звук 043, любит экспериментировать с полевыми записями и аналоговыми приборами, а его лайвы всегда на грани ритуала."
-  },
-  {
-    "name": "Vanya",
-    "level": 4,
-    "area": "Кураторство",
-    "img": "https://placehold.co/300x180/1e1e1e/ffffff?text=Vanya",
-    "text": "Ваня — основатель 043 и куратор направления. Он соединяет артистов, технологии и места. Работает на стыке продакшна и искусства, всегда мыслит системно и не боится делать невозможное реальностью. Он как магнит в поле хаоса."
+    "area": "Patient Zero",
+    "img": "multi-pass-ewan-1.jpg",
+    "text": "bonjour hola hello who are we and who are you at this mad party? we are not a group and you? follow the ones with pass-card and you will see. see what? oh, it depends on your perception. tschüss!"
   }
 ]
-
