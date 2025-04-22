@@ -4,9 +4,11 @@ body {
   background-blend-mode: overlay;
   font-family: 'IBM Plex Mono', monospace;
 }
+
 .fade-transition {
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 @keyframes fadeInActive {
   0% {
     opacity: 0;
@@ -17,70 +19,22 @@ body {
     transform: scale(1);
   }
 }
+
 @keyframes flicker {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
 }
+
 @keyframes pulseLine {
   0%, 100% { stroke: #fff; }
   50% { stroke: #ccc; }
 }
+
 @keyframes floatLines {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-3px); }
 }
-.animate-flicker {
-  animation: flicker 1.6s infinite ease-in-out;
-}
-.delay-100 { animation-delay: 0.2s; }
-.delay-200 { animation-delay: 0.4s; }
-.delay-300 { animation-delay: 0.6s; }
-.animate-pulse-line {
-  animation: pulseLine 2.5s infinite;
-}
-.animate-float-lines {
-  animation: floatLines 5s ease-in-out infinite;
-}
-#line-container {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-left: 40px;
-  margin-top: 0;
-}
-.line-entry {
-  width: 300px;
-  height: 18px;
-  background-color: #9ca3af;
-  border-radius: 0.25rem;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.line-entry:hover {
-  opacity: 1;
-  background-color: #d1d5db;
-}
-.line-entry.active {
-  background-color: #1f2937;
-  opacity: 1;
-  height: 180px;
-  transform: scale(1.15);
-  animation: fadeInActive 0.6s ease forwards;
-}
-.line-entry img {
-  display: none;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-.line-entry.active img {
-  display: block;
-}
-  
+
 @keyframes drawLine {
   0% {
     stroke-dasharray: 0, 200;
@@ -91,15 +45,99 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes floatDot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Animation classes */
+.animate-flicker {
+  animation: flicker 1.6s infinite ease-in-out;
+}
+
+.animate-pulse-line {
+  animation: pulseLine 2.5s infinite;
+}
+
+.animate-float-lines {
+  animation: floatLines 5s ease-in-out infinite;
+}
+
 .animate-draw-line {
   stroke-dasharray: 200;
   stroke-dashoffset: 200;
   animation: drawLine 1.6s ease forwards;
 }
+
 .float-point {
   animation: floatDot 2.5s ease-in-out infinite;
 }
-@keyframes floatDot {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+
+/* Animation delays */
+.delay-100 { animation-delay: 0.2s; }
+.delay-200 { animation-delay: 0.4s; }
+.delay-300 { animation-delay: 0.6s; }
+
+/* Line container styling */
+#line-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 40px;
+  margin-top: 0;
+}
+
+.line-entry {
+  width: 300px;
+  height: 18px;
+  background-color: #9ca3af;
+  border-radius: 0.25rem;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.line-entry:hover {
+  opacity: 1;
+  background-color: #d1d5db;
+}
+
+.line-entry.active {
+  background-color: #1f2937;
+  opacity: 1;
+  height: 180px;
+  transform: scale(1.15);
+  animation: fadeInActive 0.6s ease forwards;
+}
+
+.line-entry img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.line-entry.active img {
+  display: block;
+}
+
+/* Network visualization styling */
+#network-overlay {
+  transition: opacity 0.6s ease;
+}
+
+#network-overlay svg {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#network-overlay line {
+  transition: all 1.2s ease;
+}
+
+#network-overlay circle {
+  transition: all 0.8s ease;
 }
