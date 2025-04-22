@@ -9,7 +9,7 @@ fetch('members.json')
   .then(res => res.json())
   .then(data => {
     members = data;
-    renderLines();
+    renderFolders();
     updateActiveEntry();
     initNetworkVisualization();
   })
@@ -18,35 +18,28 @@ fetch('members.json')
     description.innerHTML = '<p class="text-red-500">Error loading member data. Please try again later.</p>';
   });
 
-// Create the folder-like entries for each member
-function renderLines() {
+// Create the visual folder entries for each member
+function renderFolders() {
   container.innerHTML = '';
   members.forEach((member, index) => {
     const entry = document.createElement('div');
     entry.className = 'folder-entry fade-transition';
     
-    // Create the folder tab background elements
-    const tabBg = document.createElement('div');
-    tabBg.className = 'folder-tab';
+    // Create the tab part (left side)
+    const tabElement = document.createElement('div');
+    tabElement.className = 'folder-tab';
+    tabElement.innerHTML = `<span class="folder-id">${member.id}</span>`;
     
-    const tabLeftBg = document.createElement('div');
-    tabLeftBg.className = 'folder-tab-left';
+    // Create the body part (right side)
+    const bodyElement = document.createElement('div');
+    bodyElement.className = 'folder-body';
+    bodyElement.innerHTML = `<span class="folder-area">${member.area}</span>`;
     
-    // Create the folder ID (on the left tab)
-    const idElem = document.createElement('div');
-    idElem.className = 'folder-id';
-    idElem.textContent = member.id;
+    // Add the parts to the folder entry
+    entry.appendChild(tabElement);
+    entry.appendChild(bodyElement);
     
-    // Create the area text (on the main part)
-    const areaElem = document.createElement('div');
-    areaElem.className = 'folder-area';
-    areaElem.textContent = member.area;
-    
-    entry.appendChild(tabBg);
-    entry.appendChild(tabLeftBg);
-    entry.appendChild(idElem);
-    entry.appendChild(areaElem);
-    
+    // Add click event
     entry.addEventListener('click', () => {
       currentIndex = index;
       updateActiveEntry();
@@ -59,7 +52,7 @@ function renderLines() {
 
 // Update the currently selected member and display their information
 function updateActiveEntry() {
-  // Update which line is active
+  // Update which folder is active
   Array.from(container.children).forEach((entry, index) => {
     entry.classList.toggle('active', index === currentIndex);
   });
@@ -82,20 +75,4 @@ function updateActiveEntry() {
       <p>${member.facts}</p>
     </div>
   `;
-}
-
-// Initialize network visualization (existing function)
-function initNetworkVisualization() {
-  // This function is assumed to be defined in lines.js
-  if (typeof window.initNetworkVisualization === 'function') {
-    window.initNetworkVisualization(members);
-  }
-}
-
-// Update network visualization (existing function)
-function updateNetworkVisualization(member) {
-  // This function is assumed to be defined in lines.js
-  if (typeof window.updateNetworkVisualization === 'function') {
-    window.updateNetworkVisualization(member);
-  }
 }
