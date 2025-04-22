@@ -71,35 +71,10 @@ body {
 .line-entry.active img {
   display: block;
 }
-.glitch-text {
-  position: relative;
-  color: white;
-  animation: flicker 3s infinite linear;
-}
-.glitch-text::after {
-  content: attr(data-text);
-  position: absolute;
-  left: 2px;
-  top: 0;
-  color: #ff00c8;
-  opacity: 0.8;
-  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
-  animation: flicker 2s infinite alternate;
-}
-.glitch-text::before {
-  content: attr(data-text);
-  position: absolute;
-  left: -2px;
-  top: 0;
-  color: #00fff9;
-  opacity: 0.8;
-  clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
-  animation: flicker 2s infinite alternate;
-}
-@keyframes flicker {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-    opacity: 1;
-  }
+
+
+
+
   20%, 24%, 55% {
     opacity: 0.6;
   }
@@ -117,7 +92,7 @@ body {
       <a href="#" class="hover:text-gray-400 transition">my 043</a>
     </nav>
   </header>
-  <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest glitch-text" data-text="Dossier Archive">Dossier Archive</h1>
+  <h1 class="text-4xl font-bold mt-16 mb-12 self-center font-mono uppercase tracking-wider text-yellow-300">Dossier Archive</h1>
   <div class="flex flex-row gap-16 items-start w-full">
     <div id="line-container" class="relative">
       <!-- Lines injected here -->
@@ -180,3 +155,4 @@ body {
   </script>
 </body>
 </html>
+
