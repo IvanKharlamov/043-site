@@ -213,7 +213,7 @@ function updateNetworkVisualization(member) {
     // Remove connections that won't be reused
     lines.forEach(line => {
       const lineId = line.getAttribute('data-id');
-      const connectionExists = connections.some(conn => conn.id === lineId);
+      const connectionExists = false;
       if (!connectionExists) {
         // Fade out and remove
         line.style.opacity = 0;
