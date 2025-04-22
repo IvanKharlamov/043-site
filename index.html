@@ -7,6 +7,29 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
+  .vhs-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    mix-blend-mode: overlay;
+    animation: vhsGlitch 0.25s infinite;
+  }
+
+  @keyframes vhsGlitch {
+    0% { transform: translateY(0); opacity: 0.03; }
+    50% { transform: translateY(1px); opacity: 0.05; }
+    100% { transform: translateY(0); opacity: 0.03; }
+  }
 .fadein { opacity: 0; animation: fadeInCard 0.3s ease forwards; }
 @keyframes fadeInCard {
   from { opacity: 0; transform: scale(0.95); }
@@ -56,8 +79,9 @@ body {
   object-fit: cover;
   border-radius: 0.25rem;
 }
-.line-entry.active img {
-  display: block;
+$1
+  position: relative;
+  z-index: 1;
 }
 .glitch-text {
   position: relative;
@@ -92,7 +116,26 @@ body {
     opacity: 0.6;
   }
 }
-  </style>
+  .line-entry.active img::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://grainy-gradients.vercel.app/noise.svg');
+  opacity: 0.08;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  animation: noiseShift 1.5s infinite linear;
+}
+
+@keyframes noiseShift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(5px, -5px); }
+}
+
+$1
 </head>
 <body class="bg-black text-white font-sans min-h-screen flex flex-col items-start justify-start p-8">
   <h1 class="text-3xl font-bold mb-8 self-start font-mono uppercase tracking-widest glitch-text" data-text="Dossier Archive">Dossier Archive</h1>
@@ -124,8 +167,8 @@ body {
       members.forEach((member, index) => {
         const entry = document.createElement('div');
         entry.className = 'line-entry';
-        entry.innerHTML = `<img src="${member.img}" alt="${member.name}">`;
-        entry.addEventListener('click', () => {
+        $1
+        entry.innerHTML += `<div class='vhs-overlay'></div>`;        entry.addEventListener('click', () => {
           currentIndex = index;
           updateActiveEntry();
         });
