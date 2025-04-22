@@ -29,7 +29,7 @@ function renderLines() {
     entry.addEventListener('click', () => {
       currentIndex = index;
       updateActiveEntry();
-      updateNetworkVisualization(members[currentIndex].id);
+      updateNetworkVisualization(members[currentIndex]);
     });
     container.appendChild(entry);
   });
@@ -87,13 +87,18 @@ function initNetworkVisualization() {
   networkOverlay.appendChild(networkSvg);
   
   // Generate initial visualization based on first member
-  updateNetworkVisualization(members[currentIndex].id);
+  updateNetworkVisualization(members[currentIndex]);
 }
 
-// Update the network visualization based on member ID
-function updateNetworkVisualization(memberId) {
-  const hash = simpleHash(memberId);
-  const seed = hash % 10000 / 10000; // Normalized seed value between 0-1
+// Update the network visualization based on member data
+function updateNetworkVisualization(member) {
+  const memberId = member.id;
+  const memberName = member.name;
+  const memberSince = member.since;
+  const memberArea = member.area;
+  
+  // Generate a more varied seed based on multiple member properties
+  const baseSeed = simpleHash(memberId + memberName + memberSince);
   
   // Clear previous points and lines
   while (networkSvg.firstChild) {
@@ -101,7 +106,7 @@ function updateNetworkVisualization(memberId) {
   }
   
   // Number of points to generate (40-60)
-  const pointCount = 40 + Math.floor(seed * 20);
+  const pointCount = 40 + Math.floor((baseSeed % 1000) / 1000 * 20);
   
   // Generate points with positions influenced by the hash
   const points = [];
@@ -109,24 +114,32 @@ function updateNetworkVisualization(memberId) {
   const svgHeight = networkOverlay.clientHeight;
   
   for (let i = 0; i < pointCount; i++) {
-    // Use hash and index to create semi-random but deterministic positions
-    const pointSeed = simpleHash(`${memberId}-${i}`) / 10000000;
+    // Use different member properties for each point to create diversity
+    const seedSource = i % 4 === 0 ? memberId : 
+                      i % 4 === 1 ? memberName : 
+                      i % 4 === 2 ? memberSince : 
+                      memberArea;
+                      
+    // Create unique seed for each point
+    const pointSeed = simpleHash(`${seedSource}-${i}-${baseSeed}`);
     
-    const x = 20 + (pointSeed * 743 % 1) * (svgWidth - 40);
-    const y = 20 + (pointSeed * 547 % 1) * (svgHeight - 40);
+    // Use prime numbers and modulo to create better distribution
+    const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
+    const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
     
     points.push({ x, y });
   }
   
   // Generate connections between points
   const connections = [];
-  const connectionCount = Math.floor(pointCount * 0.5); // About 50% of points will have connections
+  const connectionCount = Math.floor(pointCount * 0.75); // Increase connections to 75%
   
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
     
-    // Use hash to determine which point to connect to
-    const connectToIndex = (startIndex + Math.floor(simpleHash(`${memberId}-conn-${i}`) % pointCount)) % pointCount;
+    // Use different properties to determine connections
+    const connectSeed = simpleHash(`${memberId}-${memberName}-conn-${i}`);
+    const connectToIndex = (startIndex + 1 + (connectSeed % (pointCount - 1))) % pointCount;
     
     if (startIndex !== connectToIndex) {
       connections.push({
@@ -158,14 +171,21 @@ function updateNetworkVisualization(memberId) {
     circle.setAttribute('cx', point.x);
     circle.setAttribute('cy', point.y);
     
-    // Make most dots very small with occasional larger ones
-    const sizeVariation = simpleHash(`${memberId}-size-${index}`) % 100;
-    const radius = sizeVariation < 85 ? 1 + (sizeVariation % 2) : 3 + (sizeVariation % 4);
+    // Make dot sizes more varied using different seeds
+    const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${index}`);
+    const sizeVariation = sizeSeed % 100;
+    // More varied dot sizes with occasional larger ones
+    const radius = sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
+                  sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
+                  2.5 + (sizeVariation % 4) * 0.75;
     
     circle.setAttribute('r', radius);
     circle.setAttribute('fill', '#fff');
-    circle.setAttribute('class', 'animate-flicker float-point');
-    circle.setAttribute('style', `animation-delay: ${index * 0.05}s`);
+    
+    // Vary animation styles based on index
+    const animClass = index % 3 === 0 ? 'animate-flicker' : 'float-point';
+    circle.setAttribute('class', animClass);
+    circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: ${0.6 + (sizeSeed % 5) * 0.08}`);
     
     networkSvg.appendChild(circle);
   });
