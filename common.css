@@ -44,16 +44,14 @@ body {
   top: 0;
   width: 120px;
   height: 100%;
-  background-color: rgba(75, 75, 75, 0.5);
+  background-color: #ffbb33;
   border-radius: 5px 0 0 5px;
   clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  border-top: 1px solid rgba(150, 150, 150, 0.3);
-  border-left: 1px solid rgba(150, 150, 150, 0.3);
-  border-bottom: 1px solid rgba(150, 150, 150, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .folder-body {
@@ -62,38 +60,13 @@ body {
   top: 0;
   right: 0;
   height: 100%;
-  background-color: rgba(50, 50, 50, 0.5);
+  background-color: #ffe088;
   border-radius: 0 5px 5px 0;
   display: flex;
   align-items: center;
   padding-left: 25px;
   z-index: 1;
-  border: 1px solid rgba(150, 150, 150, 0.3);
-}
-
-.folder-id {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(255, 255, 200, 0.8);
-}
-
-.folder-area {
-  font-size: 0.85rem;
-  color: rgba(200, 200, 200, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.folder-entry:hover {
-  transform: translateX(5px) scale(1.02);
-}
-
-.folder-entry:not(.active):hover .folder-tab {
-  background-color: rgba(100, 100, 100, 0.7);
-}
-
-.folder-entry:not(.active):hover .folder-body {
-  background-color: rgba(70, 70, 70, 0.7);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .folder-entry.active {
@@ -101,13 +74,38 @@ body {
 }
 
 .folder-entry.active .folder-tab {
-  background-color: rgba(255, 255, 200, 0.2);
-  border-top: 1px solid rgba(255, 255, 200, 0.5);
-  border-left: 1px solid rgba(255, 255, 200, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 200, 0.5);
+  background-color: #ffcc44;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .folder-entry.active .folder-body {
-  background-color: rgba(255, 255, 200, 0.1);
-  border: 1px solid rgba(255, 255, 200, 0.5);
+  background-color: #fff0aa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.folder-id {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(100, 80, 0, 0.8);
+  text-transform: uppercase;
+}
+
+.folder-area {
+  font-size: 1.2rem;
+  color: rgba(100, 80, 0, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.folder-entry:hover {
+  transform: translateX(5px) scale(1.02);
+}
+
+.folder-entry:not(.active):hover .folder-tab {
+  filter: brightness(1.05);
+}
+
+.folder-entry:not(.active):hover .folder-body {
+  filter: brightness(1.05);
 }
