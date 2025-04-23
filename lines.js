@@ -1,10 +1,10 @@
 // Network visualization configuration
 const CONFIG = {
   // Point settings
-  POINT_COUNT: 15,                  // Number of nodes in the network
+  POINT_COUNT: 30,                  // Number of nodes in the network
   MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
   RIGHT_SIDE_RATIO: 0.9,            // Percentage of dots to place on the right side (90%)
-  RIGHT_SIDE_THRESHOLD: 0.5,        // X-position threshold for right side (0.5 = midpoint)
+  RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.5 = midpoint)
   MIN_DOT_SIZE: 0.8 * 5,            // Minimum dot radius (px)
   MAX_DOT_SIZE: 3.25 * 5,           // Maximum dot radius (px)
   DOT_SIZE_TIERS: [                 // Size distribution tiers (percentiles)
@@ -16,7 +16,7 @@ const CONFIG = {
   OPACITY_STEP: 0.08,               // Opacity variation step
 
   // Connection settings
-  CONNECTION_RATIO: 0.5,            // Connections as ratio of point count
+  CONNECTION_RATIO: 0.75,            // Connections as ratio of point count
   CONNECTION_STROKE_WIDTH: 1,       // Line thickness (px)
   CONNECTION_OPACITY: 0.8,          // Line opacity
   
@@ -126,6 +126,7 @@ function calculateNetworkPositions(member) {
     for (const tier of CONFIG.DOT_SIZE_TIERS) {
       if (sizeVariation < tier.threshold) {
         radius = tier.min + (sizeSeed % ((tier.max - tier.min) * 10)) / 10;
+		radius *= 5;
         break;
       }
     }
