@@ -1,3 +1,33 @@
+// Network visualization configuration
+const CONFIG = {
+  // Point settings
+  POINT_COUNT: 15,                  // Number of nodes in the network
+  MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
+  RIGHT_SIDE_RATIO: 0.9,            // Percentage of dots to place on the right side (90%)
+  RIGHT_SIDE_THRESHOLD: 0.5,        // X-position threshold for right side (0.5 = midpoint)
+  MIN_DOT_SIZE: 0.8 * 5,            // Minimum dot radius (px)
+  MAX_DOT_SIZE: 3.25 * 5,           // Maximum dot radius (px)
+  DOT_SIZE_TIERS: [                 // Size distribution tiers (percentiles)
+    { threshold: 70, min: 0.8, max: 1.2 },    // 70% of dots are small
+    { threshold: 90, min: 1.5, max: 2.0 },    // 20% of dots are medium
+    { threshold: 100, min: 2.5, max: 3.25 }   // 10% of dots are large
+  ],
+  MIN_DOT_OPACITY: 0.6,             // Minimum opacity for dots
+  OPACITY_STEP: 0.08,               // Opacity variation step
+
+  // Connection settings
+  CONNECTION_RATIO: 0.5,            // Connections as ratio of point count
+  CONNECTION_STROKE_WIDTH: 1,       // Line thickness (px)
+  CONNECTION_OPACITY: 0.8,          // Line opacity
+  
+  // Animation settings
+  DOT_FADE_DELAY_BASE: 10,          // Base delay for dot fade-in (ms)
+  DOT_FADE_DELAY_STEP: 5,           // Additional delay per dot (ms)
+  CONNECTION_FADE_DELAY_STEP: 20,   // Delay between connection appearances (ms)
+  DOT_TRANSITION_TIME: 800,         // Time for dots to move to new positions (ms)
+  DOT_REMOVAL_TIME: 800             // Time before removing unused dots (ms)
+};
+
 // Network visualization variables
 const networkOverlay = document.getElementById('network-overlay');
 let networkSvg;
@@ -45,13 +75,17 @@ function calculateNetworkPositions(member) {
   // Generate a more varied seed based on multiple member properties
   const baseSeed = simpleHash(memberId + memberName + memberSince);
   
-  // Static number of points (15)
-  const pointCount = 15;
+  // Get point count from config
+  const pointCount = CONFIG.POINT_COUNT;
   
   // Generate points with positions influenced by the hash
   const points = [];
   const svgWidth = networkOverlay.clientWidth;
   const svgHeight = networkOverlay.clientHeight;
+  
+  // Calculate how many points should be on the right side
+  const rightSidePointCount = Math.round(pointCount * CONFIG.RIGHT_SIDE_RATIO);
+  const leftSidePointCount = pointCount - rightSidePointCount;
   
   for (let i = 0; i < pointCount; i++) {
     // Use different member properties for each point to create diversity
@@ -63,19 +97,41 @@ function calculateNetworkPositions(member) {
     // Create unique seed for each point
     const pointSeed = simpleHash(`${seedSource}-${i}-${baseSeed}`);
     
-    // Use prime numbers and modulo to create better distribution
-    const x = 20 + ((pointSeed * 17) % 997) / 997 * (svgWidth - 40);
-    const y = 20 + ((pointSeed * 31) % 991) / 991 * (svgHeight - 40);
+    // Determine if this point should be on the right side based on index
+    const isRightSide = i < rightSidePointCount;
     
-    // Calculate radius based on seed - MULTIPLIED BY 5
+    // Calculate x position based on which side the point should be on
+    let x;
+    if (isRightSide) {
+      // Right side points (50% to 100% of width)
+      const rightSideWidth = svgWidth * (1 - CONFIG.RIGHT_SIDE_THRESHOLD);
+      x = svgWidth * CONFIG.RIGHT_SIDE_THRESHOLD + CONFIG.MIN_POINT_MARGIN + 
+          ((pointSeed * 17) % 997) / 997 * (rightSideWidth - (CONFIG.MIN_POINT_MARGIN * 2));
+    } else {
+      // Left side points (0% to 50% of width)
+      const leftSideWidth = svgWidth * CONFIG.RIGHT_SIDE_THRESHOLD;
+      x = CONFIG.MIN_POINT_MARGIN + 
+          ((pointSeed * 17) % 997) / 997 * (leftSideWidth - (CONFIG.MIN_POINT_MARGIN * 2));
+    }
+    
+    // Y position calculation remains the same
+    const y = CONFIG.MIN_POINT_MARGIN + ((pointSeed * 31) % 991) / 991 * (svgHeight - (CONFIG.MIN_POINT_MARGIN * 2));
+    
+    // Calculate radius based on seed
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
     const sizeVariation = sizeSeed % 100;
-    const radius = (sizeVariation < 70 ? 0.8 + (sizeVariation % 2) * 0.4 : 
-                   sizeVariation < 90 ? 1.5 + (sizeVariation % 3) * 0.5 : 
-                   2.5 + (sizeVariation % 4) * 0.75) * 5; // Multiplied by 5
+    
+    // Use tiered sizing approach from config
+    let radius;
+    for (const tier of CONFIG.DOT_SIZE_TIERS) {
+      if (sizeVariation < tier.threshold) {
+        radius = tier.min + (sizeSeed % ((tier.max - tier.min) * 10)) / 10;
+        break;
+      }
+    }
     
     // Add opacity variation
-    const opacity = 0.6 + (sizeSeed % 5) * 0.08;
+    const opacity = CONFIG.MIN_DOT_OPACITY + (sizeSeed % 5) * CONFIG.OPACITY_STEP;
     
     // Add point data - now only using blink animation
     points.push({ 
@@ -90,7 +146,7 @@ function calculateNetworkPositions(member) {
   
   // Generate connections between points
   const connections = [];
-  const connectionCount = Math.floor(pointCount * 0.5);
+  const connectionCount = Math.floor(pointCount * CONFIG.CONNECTION_RATIO);
   
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
@@ -166,7 +222,7 @@ function updateNetworkVisualization(member) {
       // Fade in
       setTimeout(() => {
         circle.style.opacity = point.opacity;
-      }, 10 + index * 5);
+      }, CONFIG.DOT_FADE_DELAY_BASE + index * CONFIG.DOT_FADE_DELAY_STEP);
     }
   });
   
@@ -183,7 +239,7 @@ function updateNetworkVisualization(member) {
           if (circle.parentNode) {
             circle.parentNode.removeChild(circle);
           }
-        }, 800); // Match the transition duration
+        }, CONFIG.DOT_REMOVAL_TIME); // Match the transition duration
       }
     });
   }
@@ -200,7 +256,7 @@ function updateNetworkVisualization(member) {
       line.setAttribute('x2', conn.x2);
       line.setAttribute('y2', conn.y2);
       line.setAttribute('stroke', '#fff');
-      line.setAttribute('stroke-width', '1'); // Increased from 0.2 to 1 for prominence
+      line.setAttribute('stroke-width', CONFIG.CONNECTION_STROKE_WIDTH);
       line.setAttribute('data-id', conn.id);
       line.setAttribute('style', 'opacity: 0;');
       
@@ -208,10 +264,10 @@ function updateNetworkVisualization(member) {
       
       // Fade in with delay
       setTimeout(() => {
-        line.style.opacity = 0.8; // Increased from default for more prominence
-      }, index * 20); // Sequential appearance
+        line.style.opacity = CONFIG.CONNECTION_OPACITY;
+      }, index * CONFIG.CONNECTION_FADE_DELAY_STEP); // Sequential appearance
     });
-  }, 800); // Wait for dots to move first
+  }, CONFIG.DOT_TRANSITION_TIME); // Wait for dots to move first
   
   // Update stored data for next transition
   prevPoints = [...points];
