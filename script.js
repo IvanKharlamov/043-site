@@ -22,7 +22,7 @@ function renderLines() {
   members.forEach((member, index) => {
     const entry = document.createElement('div');
     entry.className = 'line-entry fade-transition';
-    entry.innerHTML = '<img src="${member.img}" alt="${member.name}">';
+    entry.innerHTML = <img src="${member.img}" alt="${member.name}">;
     entry.addEventListener('click', () => {
       currentIndex = index;
       updateActiveEntry();
