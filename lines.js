@@ -126,7 +126,7 @@ function calculateNetworkPositions(member) {
     for (const tier of CONFIG.DOT_SIZE_TIERS) {
       if (sizeVariation < tier.threshold) {
         radius = tier.min + (sizeSeed % ((tier.max - tier.min) * 10)) / 10;
-		radius *= 5;
+		radius *= 2;
         break;
       }
     }
