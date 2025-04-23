@@ -21,6 +21,7 @@ const CONFIG = {
   CONNECTION_RATIO: 0.75,           // Connections as ratio of point count
   CONNECTION_STROKE_WIDTH: 1,       // Line thickness (px)
   CONNECTION_OPACITY: 0.8,          // Line opacity
+  PROXIMITY_THRESHOLD: 600,
   
   // Animation settings
   DOT_FADE_DELAY_BASE: 10,          // Base delay for dot fade-in (ms)
