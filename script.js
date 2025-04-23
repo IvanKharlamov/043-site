@@ -25,13 +25,6 @@ function renderLines() {
     const entry = document.createElement('div');
     entry.className = 'folder-entry fade-transition';
     
-    // Create the folder tab background elements
-    const tabBg = document.createElement('div');
-    tabBg.className = 'folder-tab';
-    
-    const tabLeftBg = document.createElement('div');
-    tabLeftBg.className = 'folder-tab-left';
-    
     // Create the folder ID (on the left tab)
     const idElem = document.createElement('div');
     idElem.className = 'folder-id';
@@ -42,8 +35,6 @@ function renderLines() {
     areaElem.className = 'folder-area';
     areaElem.textContent = member.area;
     
-    entry.appendChild(tabBg);
-    entry.appendChild(tabLeftBg);
     entry.appendChild(idElem);
     entry.appendChild(areaElem);
     
