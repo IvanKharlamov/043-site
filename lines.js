@@ -4,7 +4,9 @@ const CONFIG = {
   POINT_COUNT: 30,                  // Number of nodes in the network
   MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
   RIGHT_SIDE_RATIO: 0.9,            // Percentage of dots to place on the right side (90%)
-  RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.5 = midpoint)
+  RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.6 = 60% point)
+  CENTER_Y_RATIO: 0.7,              // Height of the central Y band (70%)
+  CENTER_Y_OFFSET: 0.15,            // Offset from top (centers the 70% band)
   MIN_DOT_SIZE: 0.8 * 5,            // Minimum dot radius (px)
   MAX_DOT_SIZE: 3.25 * 5,           // Maximum dot radius (px)
   DOT_SIZE_TIERS: [                 // Size distribution tiers (percentiles)
@@ -16,7 +18,7 @@ const CONFIG = {
   OPACITY_STEP: 0.08,               // Opacity variation step
 
   // Connection settings
-  CONNECTION_RATIO: 0.75,            // Connections as ratio of point count
+  CONNECTION_RATIO: 0.75,           // Connections as ratio of point count
   CONNECTION_STROKE_WIDTH: 1,       // Line thickness (px)
   CONNECTION_OPACITY: 0.8,          // Line opacity
   
@@ -83,9 +85,16 @@ function calculateNetworkPositions(member) {
   const svgWidth = networkOverlay.clientWidth;
   const svgHeight = networkOverlay.clientHeight;
   
-  // Calculate how many points should be on the right side
+  // Calculate how many points should be on the right side (90%)
   const rightSidePointCount = Math.round(pointCount * CONFIG.RIGHT_SIDE_RATIO);
-  const leftSidePointCount = pointCount - rightSidePointCount;
+  const randomPointCount = pointCount - rightSidePointCount;
+  
+  // Calculate the Y-axis bounds for the central area
+  const centralYStart = svgHeight * CONFIG.CENTER_Y_OFFSET;
+  const centralYHeight = svgHeight * CONFIG.CENTER_Y_RATIO;
+  
+  // Create an array to track which group each point belongs to
+  const pointGroups = [];
   
   for (let i = 0; i < pointCount; i++) {
     // Use different member properties for each point to create diversity
@@ -97,25 +106,30 @@ function calculateNetworkPositions(member) {
     // Create unique seed for each point
     const pointSeed = simpleHash(`${seedSource}-${i}-${baseSeed}`);
     
-    // Determine if this point should be on the right side based on index
-    const isRightSide = i < rightSidePointCount;
+    // Determine if this point should be in the structured group (right side, central Y)
+    const isStructured = i < rightSidePointCount;
+    pointGroups[i] = isStructured ? 'structured' : 'random';
     
-    // Calculate x position based on which side the point should be on
-    let x;
-    if (isRightSide) {
-      // Right side points (50% to 100% of width)
+    // Calculate positions based on which group the point belongs to
+    let x, y;
+    
+    if (isStructured) {
+      // RIGHT SIDE + CENTRAL Y points
+      // X position: Between RIGHT_SIDE_THRESHOLD and right edge
       const rightSideWidth = svgWidth * (1 - CONFIG.RIGHT_SIDE_THRESHOLD);
       x = svgWidth * CONFIG.RIGHT_SIDE_THRESHOLD + CONFIG.MIN_POINT_MARGIN + 
           ((pointSeed * 17) % 997) / 997 * (rightSideWidth - (CONFIG.MIN_POINT_MARGIN * 2));
+      
+      // Y position: Central 70% of the screen
+      y = centralYStart + CONFIG.MIN_POINT_MARGIN + 
+          ((pointSeed * 31) % 991) / 991 * (centralYHeight - (CONFIG.MIN_POINT_MARGIN * 2));
     } else {
-      // Left side points (0% to 50% of width)
-      const leftSideWidth = svgWidth * CONFIG.RIGHT_SIDE_THRESHOLD;
+      // FULLY RANDOM points (anywhere on screen)
       x = CONFIG.MIN_POINT_MARGIN + 
-          ((pointSeed * 17) % 997) / 997 * (leftSideWidth - (CONFIG.MIN_POINT_MARGIN * 2));
+          ((pointSeed * 17) % 997) / 997 * (svgWidth - (CONFIG.MIN_POINT_MARGIN * 2));
+      y = CONFIG.MIN_POINT_MARGIN + 
+          ((pointSeed * 31) % 991) / 991 * (svgHeight - (CONFIG.MIN_POINT_MARGIN * 2));
     }
-    
-    // Y position calculation remains the same
-    const y = CONFIG.MIN_POINT_MARGIN + ((pointSeed * 31) % 991) / 991 * (svgHeight - (CONFIG.MIN_POINT_MARGIN * 2));
     
     // Calculate radius based on seed
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
@@ -126,7 +140,7 @@ function calculateNetworkPositions(member) {
     for (const tier of CONFIG.DOT_SIZE_TIERS) {
       if (sizeVariation < tier.threshold) {
         radius = tier.min + (sizeSeed % ((tier.max - tier.min) * 10)) / 10;
-		radius *= 2;
+        radius *= 2;
         break;
       }
     }
@@ -134,27 +148,58 @@ function calculateNetworkPositions(member) {
     // Add opacity variation
     const opacity = CONFIG.MIN_DOT_OPACITY + (sizeSeed % 5) * CONFIG.OPACITY_STEP;
     
-    // Add point data - now only using blink animation
+    // Add point data with group information
     points.push({ 
       x, 
       y, 
       radius, 
       opacity,
       id: `point-${i}`,
-      animClass: 'animate-blink' // Only blink animation
+      animClass: 'animate-blink',
+      group: pointGroups[i]
     });
   }
   
-  // Generate connections between points
+  // Generate connections between points, but only within the same group
   const connections = [];
   const connectionCount = Math.floor(pointCount * CONFIG.CONNECTION_RATIO);
   
+  // Create a lookup of points by group
+  const structuredPoints = points.filter(p => p.group === 'structured').map((_, i) => i);
+  const randomPoints = points.filter(p => p.group === 'random').map((_, i) => rightSidePointCount + i);
+  
   for (let i = 0; i < connectionCount; i++) {
     const startIndex = i % pointCount;
+    const startGroup = pointGroups[startIndex];
     
     // Use different properties to determine connections
     const connectSeed = simpleHash(`${memberId}-${memberName}-conn-${i}`);
-    const connectToIndex = (startIndex + 1 + (connectSeed % (pointCount - 1))) % pointCount;
+    
+    // Only connect to points in the same group
+    let connectToIndex;
+    if (startGroup === 'structured') {
+      // For structured points, only connect to other structured points
+      if (structuredPoints.length > 1) {
+        const structuredIndex = startIndex % structuredPoints.length;
+        let offset = 1 + (connectSeed % (structuredPoints.length - 1));
+        connectToIndex = structuredPoints[(structuredIndex + offset) % structuredPoints.length];
+      } else {
+        continue; // Skip if not enough points in this group
+      }
+    } else {
+      // For random points, only connect to other random points
+      if (randomPoints.length > 1) {
+        const randomIndex = randomPoints.indexOf(startIndex);
+        if (randomIndex !== -1) {
+          let offset = 1 + (connectSeed % (randomPoints.length - 1));
+          connectToIndex = randomPoints[(randomIndex + offset) % randomPoints.length];
+        } else {
+          continue; // Skip if start point not found in random group
+        }
+      } else {
+        continue; // Skip if not enough points in this group
+      }
+    }
     
     if (startIndex !== connectToIndex) {
       connections.push({
@@ -217,6 +262,7 @@ function updateNetworkVisualization(member) {
       circle.setAttribute('class', point.animClass);
       circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: 0;`);
       circle.setAttribute('data-id', point.id);
+      circle.setAttribute('data-group', point.group);
       
       networkSvg.appendChild(circle);
       
