@@ -1,9 +1,9 @@
 // Network visualization configuration
 const CONFIG = {
   // Point settings
-  POINT_COUNT: 45,                  // Number of nodes in the network
+  POINT_COUNT: 30,                  // Number of nodes in the network
   MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
-  RIGHT_SIDE_RATIO: 0.8,            // Percentage of dots to place on the right side (90%)
+  RIGHT_SIDE_RATIO: 0.9,            // Percentage of dots to place on the right side (90%)
   RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.6 = 60% point)
   CENTER_Y_RATIO: 0.7,              // Height of the central Y band (70%)
   CENTER_Y_OFFSET: 0.15,            // Offset from top (centers the 70% band)
@@ -160,55 +160,85 @@ function calculateNetworkPositions(member) {
     });
   }
   
-  // Generate connections between points, but only within the same group
+  // Generate connections between points
   const connections = [];
   const connectionCount = Math.floor(pointCount * CONFIG.CONNECTION_RATIO);
   
   // Create a lookup of points by group
-  const structuredPoints = points.filter(p => p.group === 'structured').map((_, i) => i);
-  const randomPoints = points.filter(p => p.group === 'random').map((_, i) => rightSidePointCount + i);
+  const structuredPoints = [];
+  const randomPoints = [];
   
+  // Separate points into groups and store their indices
+  points.forEach((point, index) => {
+    if (point.group === 'structured') {
+      structuredPoints.push(index);
+    } else {
+      randomPoints.push(index);
+    }
+  });
+  
+  // 1. First, generate seed-based connections for structured points
   for (let i = 0; i < connectionCount; i++) {
-    const startIndex = i % pointCount;
-    const startGroup = pointGroups[startIndex];
+    // Use structured points as the base for these connections
+    if (i >= structuredPoints.length) continue;
+    
+    const startIndex = structuredPoints[i % structuredPoints.length];
     
     // Use different properties to determine connections
     const connectSeed = simpleHash(`${memberId}-${memberName}-conn-${i}`);
     
-    // Only connect to points in the same group
-    let connectToIndex;
-    if (startGroup === 'structured') {
-      // For structured points, only connect to other structured points
-      if (structuredPoints.length > 1) {
-        const structuredIndex = startIndex % structuredPoints.length;
-        let offset = 1 + (connectSeed % (structuredPoints.length - 1));
-        connectToIndex = structuredPoints[(structuredIndex + offset) % structuredPoints.length];
-      } else {
-        continue; // Skip if not enough points in this group
-      }
-    } else {
-      // For random points, only connect to other random points
-      if (randomPoints.length > 1) {
-        const randomIndex = randomPoints.indexOf(startIndex);
-        if (randomIndex !== -1) {
-          let offset = 1 + (connectSeed % (randomPoints.length - 1));
-          connectToIndex = randomPoints[(randomIndex + offset) % randomPoints.length];
-        } else {
-          continue; // Skip if start point not found in random group
-        }
-      } else {
-        continue; // Skip if not enough points in this group
+    // For structured points, only connect to other structured points
+    if (structuredPoints.length > 1) {
+      const structuredIndex = i % structuredPoints.length;
+      let offset = 1 + (connectSeed % (structuredPoints.length - 1));
+      const connectToIndex = structuredPoints[(structuredIndex + offset) % structuredPoints.length];
+      
+      if (startIndex !== connectToIndex) {
+        connections.push({
+          x1: points[startIndex].x,
+          y1: points[startIndex].y,
+          x2: points[connectToIndex].x,
+          y2: points[connectToIndex].y,
+          id: `connection-structured-${i}`,
+          type: 'structured'
+        });
       }
     }
+  }
+  
+  // 2. Generate proximity-based connections for random points
+  // For each random point, connect to other random points within the proximity threshold
+  const proximityConnections = new Set(); // To track unique connections
+  
+  for (let i = 0; i < randomPoints.length; i++) {
+    const pointA = randomPoints[i];
     
-    if (startIndex !== connectToIndex) {
-      connections.push({
-        x1: points[startIndex].x,
-        y1: points[startIndex].y,
-        x2: points[connectToIndex].x,
-        y2: points[connectToIndex].y,
-        id: `connection-${i}`
-      });
+    for (let j = i + 1; j < randomPoints.length; j++) {
+      const pointB = randomPoints[j];
+      
+      // Calculate distance between the two points
+      const dx = points[pointA].x - points[pointB].x;
+      const dy = points[pointA].y - points[pointB].y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // If points are within the proximity threshold, create a connection
+      if (distance <= CONFIG.PROXIMITY_THRESHOLD) {
+        // Create a unique ID for the connection to avoid duplicates
+        const connectionId = `proximity-${Math.min(pointA, pointB)}-${Math.max(pointA, pointB)}`;
+        
+        if (!proximityConnections.has(connectionId)) {
+          proximityConnections.add(connectionId);
+          
+          connections.push({
+            x1: points[pointA].x,
+            y1: points[pointA].y,
+            x2: points[pointB].x,
+            y2: points[pointB].y,
+            id: connectionId,
+            type: 'proximity'
+          });
+        }
+      }
     }
   }
   
@@ -305,14 +335,16 @@ function updateNetworkVisualization(member) {
       line.setAttribute('stroke', '#fff');
       line.setAttribute('stroke-width', CONFIG.CONNECTION_STROKE_WIDTH);
       line.setAttribute('data-id', conn.id);
+      line.setAttribute('data-type', conn.type || 'default');
       line.setAttribute('style', 'opacity: 0;');
       
       networkSvg.appendChild(line);
       
-      // Fade in with delay
+      // Fade in with delay - prioritize proximity connections to appear first
+      const delayMultiplier = conn.type === 'proximity' ? 0.5 : 1;
       setTimeout(() => {
         line.style.opacity = CONFIG.CONNECTION_OPACITY;
-      }, index * CONFIG.CONNECTION_FADE_DELAY_STEP); // Sequential appearance
+      }, index * CONFIG.CONNECTION_FADE_DELAY_STEP * delayMultiplier); // Sequential appearance
     });
   }, CONFIG.DOT_TRANSITION_TIME); // Wait for dots to move first
   
