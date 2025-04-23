@@ -23,78 +23,90 @@ body {
 /* File folder styling */
 .folder-entry {
   position: relative;
-  margin-bottom: 10px;
-  height: 50px;
-  width: 100%;
-  display: flex;
+  height: 40px;
+  margin-bottom: 12px;
   cursor: pointer;
-  transform-origin: left center;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.folder-entry .folder-tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(0% 0%, 20% 0%, 25% 100%, 100% 100%, 100% 0%, 100% 100%, 0% 100%);
+  background-color: #2a2a2a;
+  z-index: 1;
   transition: all 0.3s ease;
 }
 
-.folder-tab {
-  width: 80px;
+.folder-entry .folder-tab-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 25%;
   height: 100%;
-  background-color: rgba(75, 75, 75, 0.5);
-  border-radius: 5px 0 0 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top: 1px solid rgba(150, 150, 150, 0.3);
-  border-left: 1px solid rgba(150, 150, 150, 0.3);
-  border-bottom: 1px solid rgba(150, 150, 150, 0.3);
+  clip-path: polygon(0% 0%, 95% 0%, 100% 100%, 0% 100%);
+  background-color: #333333;
   z-index: 2;
+  transition: all 0.3s ease;
+  border-right: 1px solid #444;
 }
 
-.folder-body {
-  flex: 1;
-  height: 100%;
-  background-color: rgba(50, 50, 50, 0.5);
-  border-radius: 0 5px 5px 0;
-  display: flex;
-  align-items: center;
-  padding-left: 15px;
-  border: 1px solid rgba(150, 150, 150, 0.3);
-  z-index: 1;
+.folder-entry .folder-id {
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  color: #f5b33c;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  z-index: 3;
+  transition: all 0.3s ease;
 }
 
-.folder-entry.active {
-  transform: scale(1.05);
+.folder-entry .folder-area {
+  position: absolute;
+  top: 10px;
+  left: 28%;
+  color: #a0a0a0;
+  font-size: 14px;
+  text-transform: uppercase;
+  z-index: 3;
+}
+
+.folder-entry:hover .folder-tab {
+  background-color: #3a3a3a;
+}
+
+.folder-entry:hover .folder-tab-left {
+  background-color: #444444;
+}
+
+.folder-entry:hover .folder-id {
+  color: #ffc44d;
 }
 
 .folder-entry.active .folder-tab {
-  background-color: rgba(255, 255, 200, 0.2);
-  border-top: 1px solid rgba(255, 255, 200, 0.5);
-  border-left: 1px solid rgba(255, 255, 200, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 200, 0.5);
+  background-color: #3f3f3f;
+  box-shadow: 0 0 10px rgba(255, 204, 128, 0.15);
 }
 
-.folder-entry.active .folder-body {
-  background-color: rgba(255, 255, 200, 0.1);
-  border: 1px solid rgba(255, 255, 200, 0.5);
+.folder-entry.active .folder-tab-left {
+  background-color: #505050;
+  border-right-color: #f5b33c;
 }
 
-.folder-id {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(255, 255, 200, 0.8);
+.folder-entry.active .folder-id {
+  color: #ffc44d;
 }
 
-.folder-area {
-  font-size: 0.85rem;
-  color: rgba(200, 200, 200, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.folder-entry.active .folder-area {
+  color: #ffffff;
 }
 
-.folder-entry:hover {
-  transform: translateX(5px) scale(1.02);
-}
-
-.folder-entry:not(.active):hover .folder-tab {
-  background-color: rgba(100, 100, 100, 0.7);
-}
-
-.folder-entry:not(.active):hover .folder-body {
-  background-color: rgba(70, 70, 70, 0.7);
+.folder-entry.active {
+  animation: fadeInActive 0.5s ease forwards;
 }
