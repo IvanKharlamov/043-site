@@ -18,32 +18,18 @@ fetch('members.json')
     description.innerHTML = '<p class="text-red-500">Error loading member data. Please try again later.</p>';
   });
 
-// Create the folder-like entries for each member
+// Create the visual lines for each member
 function renderLines() {
   container.innerHTML = '';
   members.forEach((member, index) => {
     const entry = document.createElement('div');
-    entry.className = 'folder-entry fade-transition';
-    
-    // Create the folder ID (on the left tab)
-    const idElem = document.createElement('div');
-    idElem.className = 'folder-id';
-    idElem.textContent = member.id;
-    
-    // Create the area text (on the main part)
-    const areaElem = document.createElement('div');
-    areaElem.className = 'folder-area';
-    areaElem.textContent = member.area;
-    
-    entry.appendChild(idElem);
-    entry.appendChild(areaElem);
-    
+    entry.className = 'line-entry fade-transition';
+    entry.innerHTML = `<img src="${member.img}" alt="${member.name}">`;
     entry.addEventListener('click', () => {
       currentIndex = index;
       updateActiveEntry();
       updateNetworkVisualization(members[currentIndex]);
     });
-    
     container.appendChild(entry);
   });
 }
@@ -54,10 +40,10 @@ function updateActiveEntry() {
   Array.from(container.children).forEach((entry, index) => {
     entry.classList.toggle('active', index === currentIndex);
   });
-
+  
   // Get the current member
   const member = members[currentIndex];
-
+  
   // Update the description panel with member information
   description.innerHTML = `
     <div class="mb-4">
@@ -73,20 +59,4 @@ function updateActiveEntry() {
       <p>${member.facts}</p>
     </div>
   `;
-}
-
-// Initialize network visualization (existing function)
-function initNetworkVisualization() {
-  // This function is assumed to be defined in lines.js
-  if (typeof window.initNetworkVisualization === 'function') {
-    window.initNetworkVisualization(members);
-  }
-}
-
-// Update network visualization (existing function)
-function updateNetworkVisualization(member) {
-  // This function is assumed to be defined in lines.js
-  if (typeof window.updateNetworkVisualization === 'function') {
-    window.updateNetworkVisualization(member);
-  }
 }
