@@ -96,7 +96,6 @@
   background-color: #1f2937;
   opacity: 1;
   height: 180px;
-  transform: scale(1.15);
   animation: fadeInActive 0.6s ease forwards;
 }
 
