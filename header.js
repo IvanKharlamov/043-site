@@ -2,8 +2,8 @@ const navLinks = [
     { text: 'read&watch', href: '#' },
     { text: 'radio', href: '#' },
     { text: 'about', href: '#' },
-    { text: 'shop', href: 'huindex.html' },
-    { text: 'my 043', href: 'index.html' }
+    { text: 'index', href: 'index.html' },
+    { text: 'archive', href: 'archive.html' }
 ];
   
 document.addEventListener('DOMContentLoaded', function() {
@@ -28,6 +28,12 @@ if (document.body) {
 
 function injectHeader() {
   if (document.querySelector('.main-header')) return;
+  
+  const cssLink = document.createElement('link');
+  cssLink.rel = 'stylesheet';
+  cssLink.href = 'header.css';
+  cssLink.type = 'text/css';
+  document.head.appendChild(cssLink);
   
   const header = document.createElement('header');
   header.className = 'main-header';

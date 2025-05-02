@@ -1,4 +1,3 @@
-/* Header styles */
 .main-header {
   position: sticky;
   top: 0;
@@ -21,7 +20,6 @@
   backdrop-filter: blur(8px);
 }
 
-/* Glitch effect for header text */
 .glitch-text {
   position: relative;
   text-shadow: 0.05em 0 0 rgba(255,0,0,0.75), 
@@ -68,7 +66,6 @@
   }
 }
 
-/* Header line */
 .header-line {
   height: 1px;
   width: 120px;
@@ -76,7 +73,6 @@
   margin-top: 12px;
 }
 
-/* Navigation */
 .header-nav {
   display: flex;
   align-items: center;
@@ -93,7 +89,6 @@
   transform: translateY(-1px);
 }
 
-/* Responsive adjustments for header */
 @media (max-width: 768px) {
   .main-header {
     flex-direction: column;
