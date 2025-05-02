@@ -1,7 +1,7 @@
 // Network visualization configuration
 const CONFIG = {
   // Point settings
-  POINT_COUNT: 40,                  // Number of nodes in the network
+  POINT_COUNT: 70,                  // Number of nodes in the network
   MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
   RIGHT_SIDE_RATIO: 0.5,            // Percentage of dots to place on the right side (50%)
   RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.6 = 60% point)
