@@ -1,7 +1,7 @@
 // Network visualization configuration
 const CONFIG = {
   // Point settings
-  POINT_COUNT: 80,                  // Number of nodes in the network
+  POINT_COUNT: 40,                  // Number of nodes in the network
   MIN_POINT_MARGIN: 20,             // Minimum margin from edges (px)
   RIGHT_SIDE_RATIO: 0.5,            // Percentage of dots to place on the right side (50%)
   RIGHT_SIDE_THRESHOLD: 0.6,        // X-position threshold for right side (0.6 = 60% point)
@@ -21,7 +21,7 @@ const CONFIG = {
   CONNECTION_RATIO: 0.75,           // Connections as ratio of point count
   CONNECTION_STROKE_WIDTH: 1,       // Line thickness (px)
   CONNECTION_OPACITY: 0.8,          // Line opacity
-  PROXIMITY_THRESHOLD: 400,
+  PROXIMITY_THRESHOLD_PERCENT: 0.25, // Percentage of screen diagonal for proximity threshold
   
   // Animation settings
   DOT_FADE_DELAY_BASE: 10,          // Base delay for dot fade-in (ms)
@@ -85,6 +85,10 @@ function calculateNetworkPositions(member) {
   const points = [];
   const svgWidth = networkOverlay.clientWidth;
   const svgHeight = networkOverlay.clientHeight;
+  
+  // Calculate screen diagonal for percentage-based proximity threshold
+  const screenDiagonal = Math.sqrt(svgWidth * svgWidth + svgHeight * svgHeight);
+  const proximityThreshold = screenDiagonal * CONFIG.PROXIMITY_THRESHOLD_PERCENT;
   
   // Calculate how many points should be on the right side (90%)
   const rightSidePointCount = Math.round(pointCount * CONFIG.RIGHT_SIDE_RATIO);
@@ -223,7 +227,7 @@ function calculateNetworkPositions(member) {
       const distance = Math.sqrt(dx * dx + dy * dy);
       
       // If points are within the proximity threshold, create a connection
-      if (distance <= CONFIG.PROXIMITY_THRESHOLD) {
+      if (distance <= proximityThreshold) {
         // Create a unique ID for the connection to avoid duplicates
         const connectionId = `proximity-${Math.min(pointA, pointB)}-${Math.max(pointA, pointB)}`;
         
