@@ -11,22 +11,21 @@
   <script src="header.js"></script>
 </head>
 <body class="bg-black text-white">
-  <div class="dynamic-background"></div>
-  
-  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
-    <!-- Wanka Header with improved styling -->
+  <div class="dynamic-background z-background"></div>
+
+  <main class="relative z-base max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full container">
     <div class="mb-20">
-      <h1 class="header-text text-center text-5xl md:text-6xl mb-4 glitch-title font-mono uppercase tracking-wider text-yellow-100">WANKA</h1>
+      <h1 class="text-5xl font-bold mx-auto font-mono uppercase tracking-wider text-yellow-100 text-center">МАСТУРБАЦИЯ ОГУРЦАМИ</h1>
       <div class="header-line mx-auto"></div>
     </div>
     
-    <!-- Main content area with improved layout and more spacing -->
-    <div class="layout-container mb-32">
+    <!-- Main content area with more consistent layout matching archive.html -->
+    <div class="flex flex-col md:flex-row gap-10 items-start w-full mb-32">
       <!-- Left content section with Shrek GIF and buttons below -->
-      <div class="left-section">
+      <div class="w-full md:w-1/2">
         <!-- Shrek GIF -->
         <div class="content-card mb-8" data-aos="fade-up" data-aos-delay="100">
-          <div class="content-box aspect-video backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800">
+          <div class="backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800 rounded-md overflow-hidden">
             <div class="glitch-wrapper">
               <img src="shrek-movie.gif" alt="Shrek Movie GIF" class="w-full h-full object-cover">
               <div class="glitch-effect"></div>
@@ -36,7 +35,7 @@
         </div>
         
         <!-- Buttons placed under the GIF -->
-        <div class="buttons-container">
+        <div class="flex flex-col sm:flex-row gap-5">
           <button class="button-primary py-3 px-10 text-sm font-mono uppercase tracking-wider" data-aos="fade-up" data-aos-delay="200">
             Participate
           </button>
@@ -48,9 +47,9 @@
       </div>
       
       <!-- Right content box with lorem ipsum text -->
-      <div class="right-section">
+      <div class="w-full md:w-1/2">
         <div class="content-card h-full" data-aos="fade-up" data-aos-delay="150">
-          <div class="content-box p-8 overflow-auto backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800">
+          <div class="p-8 overflow-auto backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800 rounded-md">
             <div class="text-gray-400 text-sm mb-4 uppercase tracking-wider">Featured Content</div>
             <p class="text-gray-300 mb-6 leading-relaxed font-mono text-base">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. 
@@ -129,12 +128,11 @@
         dynamicBackground.classList.add(`pos-${step+1}`);
       }, 15000);
       
-      // Create a basic network visualization similar to archive page
+      // Create a network visualization similar to archive page
       const networkOverlay = document.getElementById('network-overlay');
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute('width', '100%');
       svg.setAttribute('height', '100%');
-      svg.style.opacity = '0.2';
       
       // Create random nodes and lines
       for (let i = 0; i < 20; i++) {

@@ -1,4 +1,4 @@
-/* huindex-revised.css - Blending elements from both designs */
+/* huindex.css - Revised to align with archive.css classes while keeping glitch effects */
 
 /* Dynamic Background with reduced opacity and simplified effect */
 .dynamic-background {
@@ -113,34 +113,6 @@
   }
 }
 
-/* Layout Container and Sections - simplified */
-.layout-container {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-  width: 100%;
-}
-
-@media (min-width: 768px) {
-  .layout-container {
-    grid-template-columns: minmax(45%, 1fr) minmax(45%, 1fr);
-    gap: 2.5rem;
-  }
-}
-
-.left-section {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.right-section {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
 /* Modified glitch title effect - more subtle */
 .glitch-title {
   position: relative;
@@ -208,7 +180,7 @@
   }
 }
 
-/* Enhanced header line */
+/* Enhanced header line - matches archive.html styling */
 .header-line {
   height: 2px;
   width: 120px;
@@ -252,39 +224,11 @@
   position: relative;
   transition: all 0.4s ease;
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .content-card:hover {
   transform: translateY(-3px);
-}
-
-/* Simplified content boxes */
-.content-box {
-  background-color: rgba(15, 15, 20, 0.5);
-  border: 1px solid rgba(80, 80, 80, 0.2);
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.4),
-    0 0 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  overflow: hidden;
-  height: 100%;
-  position: relative;
-  width: 100%;
-}
-
-.left-section .content-box {
-  min-height: 300px;
-}
-
-.right-section .content-box {
-  min-height: 400px;
-}
-
-.content-box:hover {
-  border-color: rgba(255, 240, 150, 0.3);
-  box-shadow: 
-    0 15px 30px rgba(0, 0, 0, 0.5),
-    0 0 15px rgba(255, 240, 150, 0.1);
 }
 
 /* Glitch effect on content image */
@@ -327,7 +271,7 @@
   }
 }
 
-/* Enhanced card marker */
+/* Enhanced card marker - similar to archive.html card markers */
 .card-marker {
   position: absolute;
   bottom: -5px;
@@ -348,23 +292,7 @@
   box-shadow: 0 0 8px rgba(255, 240, 150, 0.3);
 }
 
-/* Button container */
-.buttons-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-  width: 100%;
-}
-
-@media (min-width: 640px) {
-  .buttons-container {
-    flex-direction: row;
-    gap: 1.5rem;
-  }
-}
-
-/* Simplified buttons */
+/* Button styling - aligned with archive.html button styles */
 .button-primary, 
 .button-secondary {
   background-color: rgba(20, 20, 25, 0.6);
@@ -446,7 +374,7 @@
   }
 }
 
-/* Animations */
+/* Animations - fade in animation similar to archive.html */
 @keyframes fadeInActive {
   0% {
     opacity: 0;
