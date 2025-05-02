@@ -11,12 +11,17 @@
   <script src="header.js"></script>
 </head>
 <body class="bg-black text-white">
+  <!-- Network visualization overlay (from archive.html) -->
+  <div id="network-overlay" class="fixed top-0 right-0 w-full h-full pointer-events-none z-0 opacity-60">
+    <!-- SVG will be dynamically generated here -->
+  </div>
+  
   <div class="dynamic-background"></div>
   
   <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
     <!-- Wanka Header with improved styling -->
     <div class="mb-20">
-      <h1 class="header-text text-center text-5xl md:text-6xl mb-4 glitch-title">WANKA</h1>
+      <h1 class="header-text text-center text-5xl md:text-6xl mb-4 glitch-title font-mono uppercase tracking-wider text-yellow-100">WANKA</h1>
       <div class="header-line mx-auto"></div>
     </div>
     
@@ -26,7 +31,7 @@
       <div class="left-section">
         <!-- Shrek GIF -->
         <div class="content-card mb-8" data-aos="fade-up" data-aos-delay="100">
-          <div class="content-box aspect-video">
+          <div class="content-box aspect-video backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800">
             <div class="glitch-wrapper">
               <img src="shrek-movie.gif" alt="Shrek Movie GIF" class="w-full h-full object-cover">
               <div class="glitch-effect"></div>
@@ -37,12 +42,12 @@
         
         <!-- Buttons placed under the GIF -->
         <div class="buttons-container">
-          <button class="button-primary py-3 px-10 text-sm" data-aos="fade-up" data-aos-delay="200">
-            PARTICIPATE
+          <button class="button-primary py-3 px-10 text-sm font-mono uppercase tracking-wider" data-aos="fade-up" data-aos-delay="200">
+            Participate
           </button>
           
-          <button class="button-secondary py-3 px-10 text-sm" data-aos="fade-up" data-aos-delay="250">
-            GET INVITED
+          <button class="button-secondary py-3 px-10 text-sm font-mono uppercase tracking-wider" data-aos="fade-up" data-aos-delay="250">
+            Get Invited
           </button>
         </div>
       </div>
@@ -50,15 +55,15 @@
       <!-- Right content box with lorem ipsum text -->
       <div class="right-section">
         <div class="content-card h-full" data-aos="fade-up" data-aos-delay="150">
-          <div class="content-box p-8 overflow-auto">
-            <h3 class="text-2xl font-semibold mb-8 text-gray-100 neon-text">Featured Content</h3>
-            <p class="text-gray-300 mb-6 leading-relaxed">
+          <div class="content-box p-8 overflow-auto backdrop-blur-sm bg-black bg-opacity-40 border border-gray-800">
+            <div class="text-gray-400 text-sm mb-4 uppercase tracking-wider">Featured Content</div>
+            <p class="text-gray-300 mb-6 leading-relaxed font-mono text-base">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. 
             </p>
-            <p class="text-gray-300 mb-6 leading-relaxed">
+            <p class="text-gray-300 mb-6 leading-relaxed font-mono text-base">
               Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus. Mauris iaculis porttitor posuere. Praesent id metus massa, ut blandit odio.
             </p>
-            <p class="text-gray-300 leading-relaxed">
+            <p class="text-gray-300 leading-relaxed font-mono text-base">
               Proin quis tortor orci. Etiam at risus et justo dignissim congue. Donec congue lacinia dui, a porttitor lectus condimentum laoreet. Nunc eu ullamcorper orci. Quisque eget odio ac lectus vestibulum faucibus eget in metus.
             </p>
           </div>
@@ -128,6 +133,33 @@
         // Add current position class
         dynamicBackground.classList.add(`pos-${step+1}`);
       }, 15000);
+      
+      // Create a basic network visualization similar to archive page
+      const networkOverlay = document.getElementById('network-overlay');
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+      svg.style.opacity = '0.2';
+      
+      // Create random nodes and lines
+      for (let i = 0; i < 20; i++) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        const x1 = Math.random() * 100 + '%';
+        const y1 = Math.random() * 100 + '%';
+        const x2 = Math.random() * 100 + '%';
+        const y2 = Math.random() * 100 + '%';
+        
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', 'rgba(255, 255, 200, 0.2)');
+        line.setAttribute('stroke-width', '1');
+        
+        svg.appendChild(line);
+      }
+      
+      networkOverlay.appendChild(svg);
     });
   </script>
 </body>
