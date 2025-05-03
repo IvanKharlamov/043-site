@@ -21,7 +21,8 @@
 
   function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
-    canvas.width = w; canvas.height = h;
+    canvas.width  = w;
+    canvas.height = h;
     sandbox.setUniform('u_resolution', [w, h]);
   }
   window.addEventListener('resize', resizeCanvas);
@@ -36,15 +37,16 @@
 
   // time & seek
   function fmt(t) {
-    const m = Math.floor(t/60), s = Math.floor(t%60).toString().padStart(2,'0');
+    const m = Math.floor(t/60),
+          s = Math.floor(t%60).toString().padStart(2,'0');
     return `${m}:${s}`;
   }
   audio.addEventListener('loadedmetadata', () => {
     durationEl.textContent = fmt(audio.duration);
-    seekSlider.max = audio.duration;
+    seekSlider.max         = audio.duration;
   });
   audio.addEventListener('timeupdate', () => {
-    seekSlider.value       = audio.currentTime;
+    seekSlider.value         = audio.currentTime;
     currentTimeEl.textContent = fmt(audio.currentTime);
   });
   seekSlider.addEventListener('input', () => {
@@ -100,7 +102,7 @@
     audio.load();
     audioReadyPromise = waitForAudioLoad();
 
-    // wait for both to finish
+    // wait for both
     await Promise.all([currentShaderPromise, audioReadyPromise]);
 
     // hide loader & start playback
@@ -108,7 +110,7 @@
     audio.play();
   }
 
-  // Web Audio analyser + data buffers
+  // Web Audio analyser + buffers
   let analyser, bufLen, freqData, timeData;
   function setupAudioAnalyser() {
     const ctx     = new (window.AudioContext||window.webkitAudioContext)();
@@ -125,7 +127,7 @@
     renderLoop();
   }
 
-  // average of freq bins [start, end)
+  // average of freq bins [start,end)
   function avg(arr, start, end) {
     let s = 0;
     for (let i = start; i < end; i++) s += arr[i];
@@ -165,6 +167,6 @@
     if (!analyser) setupAudioAnalyser();
   });
 
-  // start with first track
+  // start first track
   selectSong(0);
 })();
