@@ -1,3 +1,4 @@
+// https://www.shadertoy.com/view/4lcSWs
 #extension GL_OES_standard_derivatives : enable
 #ifdef GL_ES
 precision mediump float;
@@ -101,8 +102,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     
     // Apply proper volume scaling
     // Ensure volume stays in a reasonable range (never goes to zero completely)
-    float v = clamp(u_volume, 0.01, 1.0);
+    float v = clamp(u_volume, 0.0, 1.0);
     
+	c = c * 1.5;
+	
     // Apply volume in a way that decreases brightness as volume decreases
     c = c * v;
     

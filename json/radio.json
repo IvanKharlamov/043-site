@@ -23,6 +23,12 @@
       "description": "Upbeat follow-up.",
       "src": "audio/track2.mp3",
       "shader": "shaders/vertical.frag"
+    },
+    {
+      "title": "Track Two alt 3",
+      "description": "Upbeat follow-up.",
+      "src": "audio/track2.mp3",
+      "shader": "shaders/cut.frag"
     }
   ]
 }
