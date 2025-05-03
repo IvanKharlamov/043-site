@@ -279,27 +279,6 @@ a:hover {
   }
 }
 
-/* Enhanced card marker - similar to archive.html card markers */
-.card-marker {
-  position: absolute;
-  bottom: -5px;
-  left: 20px;
-  width: 40px;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    rgba(255, 240, 150, 0.5), 
-    rgba(200, 200, 150, 0.5)
-  );
-  border-radius: 3px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  z-index: 5;
-}
-
-.content-card:hover .card-marker {
-  width: 60px;
-  box-shadow: 0 0 8px rgba(255, 240, 150, 0.3);
-}
-
 /* Button styling - aligned with archive.html button styles */
 .button-primary, 
 .button-secondary {
