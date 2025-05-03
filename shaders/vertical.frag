@@ -52,7 +52,7 @@ float segm(vec2 p, vec2 a, vec2 b, float nz) {
     vec2 pa = p - a;
     vec2 ba = b - a;
     float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0) + nz*0.017;
-    float waveAmp = u_mid;  // mid-band for displacement
+    float waveAmp = clamp(u_mid, 0.1, 1.0);  // mid-band for displacement, with minimum value
     vec2 disp = pa - waveAmp*0.015*(h - 1.0) - ba*h;
     return length(disp) * waveAmp * 7.0 * waveAmp;
 }
