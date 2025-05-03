@@ -3,12 +3,14 @@
     {
       "title": "Track One",
       "description": "A chill opener.",
-      "src": "audio/track1.mp3"
+      "src": "audio/track1.mp3",
+      "shader": "shaders/radio.frag"
     },
     {
       "title": "Track Two",
       "description": "Upbeat follow-up.",
-      "src": "audio/track2.mp3"
+      "src": "audio/track2.mp3",
+      "shader": "shaders/radio.frag"
     }
   ]
 }

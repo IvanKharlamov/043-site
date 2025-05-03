@@ -1,88 +1,170 @@
+// radio.js
 (async () => {
-  const listEl   = document.getElementById('song-list');
-  const titleEl  = document.getElementById('song-title');
-  const descEl   = document.getElementById('song-desc');
-  const audio    = document.getElementById('audio');
-  const canvas   = document.getElementById('bgCanvas');
+  // DOM refs
+  const listEl        = document.getElementById('song-list');
+  const titleEl       = document.getElementById('song-title');
+  const descEl        = document.getElementById('song-desc');
+  const loadingEl     = document.getElementById('loading');
+  const playBtn       = document.getElementById('play-btn');
+  const currentTimeEl = document.getElementById('current-time');
+  const durationEl    = document.getElementById('duration');
+  const seekSlider    = document.getElementById('seek-slider');
+  const volumeSlider  = document.getElementById('volume-slider');
 
-  // 1) init glsl-canvas
+  // create & configure audio element
+  const audio = new Audio();
+  audio.crossOrigin = 'anonymous';
+
+  // setup shader canvas
+  const canvas  = document.getElementById('bgCanvas');
   const sandbox = new GlslCanvas(canvas);
 
-  // 2) fetch & load external shader
-  const shaderSrc = await fetch('shaders/radio.frag').then(r => r.text());
-  sandbox.load(shaderSrc);
-
-  // 3) make sure resolution uniform stays up-to-date
-  function resize() {
+  function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
-    canvas.width = w;  canvas.height = h;
+    canvas.width = w; canvas.height = h;
     sandbox.setUniform('u_resolution', [w, h]);
   }
-  window.addEventListener('resize', resize);
-  resize();
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
-  // 4) load playlist JSON
+  // play/pause toggle
+  playBtn.addEventListener('click', () => {
+    audio.paused ? audio.play() : audio.pause();
+  });
+  audio.addEventListener('play',  () => playBtn.textContent = '⏸️');
+  audio.addEventListener('pause', () => playBtn.textContent = '▶️');
+
+  // time & seek
+  function fmt(t) {
+    const m = Math.floor(t/60), s = Math.floor(t%60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+  audio.addEventListener('loadedmetadata', () => {
+    durationEl.textContent = fmt(audio.duration);
+    seekSlider.max = audio.duration;
+  });
+  audio.addEventListener('timeupdate', () => {
+    seekSlider.value       = audio.currentTime;
+    currentTimeEl.textContent = fmt(audio.currentTime);
+  });
+  seekSlider.addEventListener('input', () => {
+    audio.currentTime = parseFloat(seekSlider.value);
+  });
+
+  // volume slider
+  volumeSlider.addEventListener('input', () => {
+    audio.volume = parseFloat(volumeSlider.value);
+  });
+
+  // load playlist JSON
   const { songs } = await fetch('json/radio.json').then(r => r.json());
-  songs.forEach((s,i) => {
+  songs.forEach((s, i) => {
     const li = document.createElement('li');
     li.textContent = s.title;
     li.addEventListener('click', () => selectSong(i));
     listEl.append(li);
   });
 
-  let analyser, dataArray, bufLen;
+  // helper: wait until audio can play through (or timeout)
+  function waitForAudioLoad() {
+    return new Promise(res => {
+      let done = false;
+      const onCan = () => { if (!done) { done = true; res(); } };
+      audio.addEventListener('canplaythrough', onCan);
+      setTimeout(onCan, 3000);
+    });
+  }
 
-  function selectSong(idx) {
-    // highlight
-    listEl.querySelectorAll('li').forEach((li,i) => li.classList.toggle('active', i===idx));
-    const s = songs[idx];
-    titleEl.textContent = s.title;
-    descEl.textContent  = s.description;
-    audio.src = s.src;
+  // select & load a track
+  let currentShaderPromise, audioReadyPromise;
+  async function selectSong(idx) {
+    // highlight in playlist
+    listEl.querySelectorAll('li').forEach((li,i) => {
+      li.classList.toggle('active', i === idx);
+    });
+    const { title, description, src, shader } = songs[idx];
+    titleEl.textContent = title;
+    descEl.textContent  = description;
+
+    // show loading overlay
+    loadingEl.classList.remove('hidden');
+
+    // 1) load & compile shader
+    currentShaderPromise = fetch(shader)
+      .then(r => r.text())
+      .then(src => sandbox.load(src));
+
+    // 2) load audio
+    audio.pause();
+    audio.src = src;
+    audio.load();
+    audioReadyPromise = waitForAudioLoad();
+
+    // wait for both to finish
+    await Promise.all([currentShaderPromise, audioReadyPromise]);
+
+    // hide loader & start playback
+    loadingEl.classList.add('hidden');
     audio.play();
   }
 
-  function setupAudio() {
-    const ctx  = new (window.AudioContext||window.webkitAudioContext)();
-    const src  = ctx.createMediaElementSource(audio);
-    analyser = ctx.createAnalyser();
-    src.connect(analyser);
+  // Web Audio analyser + data buffers
+  let analyser, bufLen, freqData, timeData;
+  function setupAudioAnalyser() {
+    const ctx     = new (window.AudioContext||window.webkitAudioContext)();
+    const srcNode = ctx.createMediaElementSource(audio);
+    analyser       = ctx.createAnalyser();
+    srcNode.connect(analyser);
     analyser.connect(ctx.destination);
     analyser.fftSize = 512;
-    bufLen = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufLen);
+
+    bufLen   = analyser.frequencyBinCount; // 256
+    freqData = new Uint8Array(bufLen);
+    timeData = new Uint8Array(analyser.fftSize);
+
     renderLoop();
   }
 
-  // average utility
-  function avg(arr, from, to) {
-    let sum=0;
-    for(let i=from; i<to; i++) sum += arr[i];
-    return (sum / ((to-from)||1)) / 255;
+  // average of freq bins [start, end)
+  function avg(arr, start, end) {
+    let s = 0;
+    for (let i = start; i < end; i++) s += arr[i];
+    return s / ((end - start) || 1) / 255;
   }
 
+  // per-frame visual update
   function renderLoop() {
     requestAnimationFrame(renderLoop);
-    analyser.getByteFrequencyData(dataArray);
 
-    // split into three bands
-    const low  = avg(dataArray, 0,            bufLen/3|0);
-    const mid  = avg(dataArray, bufLen/3|0,    2*bufLen/3|0);
-    const high = avg(dataArray, 2*bufLen/3|0,  bufLen);
+    // get frequency data
+    analyser.getByteFrequencyData(freqData);
+    const low  = avg(freqData, 0,         bufLen/3|0);
+    const mid  = avg(freqData, bufLen/3|0, 2*bufLen/3|0);
+    const high = avg(freqData, 2*bufLen/3|0, bufLen);
 
-    const t = performance.now() * 0.001;
+    // get time-domain & compute RMS volume
+    analyser.getByteTimeDomainData(timeData);
+    let sumSq = 0;
+    for (let i = 0; i < timeData.length; i++) {
+      const x = (timeData[i] / 128) - 1; // map [0,255]→[-1,1]
+      sumSq += x*x;
+    }
+    const rms = Math.sqrt(sumSq / timeData.length);
 
     // push uniforms
-    sandbox.setUniform('u_time',  t);
-    sandbox.setUniform('u_low',   low);
-    sandbox.setUniform('u_mid',   mid);
-    sandbox.setUniform('u_high',  high);
+    const t = performance.now() * 0.001;
+    sandbox.setUniform('u_time',   t);
+    sandbox.setUniform('u_low',    low);
+    sandbox.setUniform('u_mid',    mid);
+    sandbox.setUniform('u_high',   high);
+    sandbox.setUniform('u_volume', rms);
   }
 
+  // once user hits play, start analyser (one-time)
   audio.addEventListener('play', () => {
-    if (!analyser) setupAudio();
+    if (!analyser) setupAudioAnalyser();
   });
 
-  // start first track
+  // start with first track
   selectSong(0);
 })();

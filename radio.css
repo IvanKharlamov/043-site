@@ -1,20 +1,17 @@
 /* radio.css */
 
-/* full-screen shader canvas falls back to a simple gradient if JS fails */
+/* Shader canvas fallback */
 .dynamic-background {
   background: radial-gradient(circle at center, #111, #000);
-  display: block;
 }
 
-/* Sidebar styling */
-aside {
-  border-right: 1px solid rgba(255,255,255,0.1);
-}
+/* Sidebar */
+aside { border-right: 1px solid rgba(255,255,255,0.1); }
 #song-list li {
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  transition: background 0.3s;
+  padding: .5rem;
+  border-radius: .25rem;
+  transition: background .3s;
   font-family: 'IBM Plex Mono', monospace;
 }
 #song-list li:hover,
@@ -25,8 +22,62 @@ aside {
 /* Player container */
 .player-container {
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  position: relative;
+  min-height: 200px;
 }
-audio::-webkit-media-controls-panel {
-  background: transparent;
-  backdrop-filter: blur(8px);
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.spinner {
+  width: 48px; height: 48px;
+  border: 5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Audio controls footer */
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-top: 1rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.btn-control {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.time-display {
+  min-width: 5rem;
+  text-align: center;
+}
+#seek-slider, #volume-slider {
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.2);
+  height: 4px;
+  border-radius: 2px;
+  cursor: pointer;
+  flex: 1;
+}
+#seek-slider::-webkit-slider-thumb,
+#volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
 }
