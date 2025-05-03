@@ -1,0 +1,41 @@
+<!-- radio.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radio Player</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="radio.css">
+  <script src="header.js"></script>
+</head>
+<body class="bg-black text-white overflow-hidden">
+  <div class="dynamic-background z-background fixed top-0 left-0 w-full h-full"></div>
+
+  <main class="relative z-base flex h-screen">
+    <!-- Sidebar: song list -->
+    <aside class="w-1/4 bg-black bg-opacity-60 backdrop-blur-sm p-6 overflow-y-auto">
+      <h2 class="font-mono uppercase tracking-wider mb-4 text-lg">Playlist</h2>
+      <ul id="song-list" class="space-y-2"></ul>
+    </aside>
+
+    <!-- Player area -->
+    <section class="flex-1 flex flex-col items-center justify-center relative p-8">
+      <canvas id="visualizer" class="absolute top-0 left-0 w-full h-full"></canvas>
+      <div class="player-container backdrop-blur-sm bg-black bg-opacity-50 border border-gray-800 rounded-2xl p-8 relative z-10 w-full max-w-xl">
+        <div class="mb-4">
+          <h1 id="song-title" class="text-3xl font-spacegrotesk uppercase tracking-wide"></h1>
+          <p id="song-desc" class="mt-2 text-gray-300 font-mono"></p>
+        </div>
+        <audio id="audio" controls class="w-full outline-none">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </section>
+  </main>
+
+  <script src="radio.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+/* radio.css */
+/* Sidebar */
+aside {
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+#song-list li {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background 0.3s;
+}
+#song-list li:hover,
+#song-list li.active {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Player container */
+.player-container {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+audio::-webkit-media-controls-panel {
+  background: transparent;
+  backdrop-filter: blur(8px);
+}
+
+/* Canvas visualizer sits behind player */
+#visualizer {
+  z-index: 0;
+}
+
+/* Dynamic‐background fallback (in case JS fails) */
+.dynamic-background {
+  background: radial-gradient(circle at center, #111, #000);
+}
+
+/* Ensure the canvas covers full viewport */
+canvas {
+  display: block;
+}

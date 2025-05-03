@@ -5,7 +5,7 @@ const container = document.getElementById('line-container');
 const description = document.getElementById('member-description');
 
 // Fetch the members data from the JSON file
-fetch('members.json')
+fetch('json/members.json')
   .then(res => res.json())
   .then(data => {
     members = data;
