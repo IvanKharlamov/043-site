@@ -1,4 +1,4 @@
-// shaders/radio.frag
+// https://www.shadertoy.com/view/Wd23Rw
 
 #ifdef GL_ES
 precision mediump float;
