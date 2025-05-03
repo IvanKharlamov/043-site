@@ -39,7 +39,7 @@ float getSmoothBand(float freq) {
 // sum 64 sinusoids to form the waveform
 float getOsc(float x) {
     // **CRUCIAL** scale the horizontal coord back up
-    x *= 5000.0;
+    x *= 250.0;
 
     float osc = 0.0;
     for (float i = 1.0; i <= BANDS_COUNT; i += 1.0) {
