@@ -4,7 +4,7 @@
       "title": "Track One",
       "description": "A chill opener.",
       "src": "audio/track1.mp3",
-      "shader": "shaders/vaporwave.frag"
+      "shader": "shaders/circular.frag"
     },
     {
       "title": "Track Two",
@@ -22,7 +22,7 @@
       "title": "Track Two alt",
       "description": "Upbeat follow-up.",
       "src": "audio/track2.mp3",
-      "shader": "shaders/vaporwave.frag"
+      "shader": "shaders/circular.frag"
     }
   ]
 }
