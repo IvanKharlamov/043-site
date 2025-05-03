@@ -1,73 +1,88 @@
 // shaders/radio.frag
-
 #ifdef GL_ES
 precision mediump float;
 #endif
 
 uniform vec2  u_resolution;
 uniform float u_time;
-uniform float u_low;     // bass
-uniform float u_mid;     // mids
-uniform float u_high;    // highs
-uniform float u_volume;  // overall loudness
+uniform float u_low;     // bass band
+uniform float u_mid;     // mid band
+uniform float u_high;    // treble band
+uniform float u_volume;  // overall RMS loudness
 
-// constants
-#define PI 3.141592
-#define BLURR    0.3
-#define SHARPEN  1.7
+#define LINE_WIDTH          1.6
+#define PRECISION           0.25
+#define BANDS_COUNT         64.0
+#define HIGH_FREQ_APPEARANCE 0.7
+#define AMPLITUDE            4.0
 
-// HSV → RGB helper
-vec3 hue2rgb(in float h) {
-    vec3 k = mod(vec3(5., 3., 1.) + vec3(h*360.0/60.0), 6.0);
-    return vec3(1.0) 
-       - clamp(min(k, vec3(4.0) - k), 0.0, 1.0);
+// simple 1D hash
+float hash1(float v) {
+    return fract(sin(v * 124.14518) * 2123.14121) - 0.5;
 }
 
-// pick a “signal” around the circle from our bands
-float sampleSignal(float t) {
-    // use low for the core radius (bass), mids for modulation
-    // t∈[0,1]
-    float band = mix(u_low, u_mid, smoothstep(0.0,1.0,t));
-    return band;
+// approximate one frequency bin from our 3-band split
+float getBand(float freq) {
+    // map freq∈[0,1] to either low, mid or high
+    float val = freq < 1.0/3.0
+        ? u_low
+        : (freq < 2.0/3.0 ? u_mid : u_high);
+    return pow(val, 2.0 - HIGH_FREQ_APPEARANCE);
 }
 
-// pick an overall amplitude from highs
-float sampleAmpl() {
-    return u_high;
+// smooth across “PRECISION” range (we just re-use getBand here)
+float getSmoothBand(float bandFreq) {
+    float v = getBand(bandFreq);
+    v = smoothstep(0.2, 1.0, v);
+    return v * v;
+}
+
+// build the oscillator by summing sinusoids across BANDS_COUNT bins
+float getOsc(float x) {
+    float osc = 0.0;
+    for (float i = 1.0; i <= BANDS_COUNT; i += 1.0) {
+        float f = (i / BANDS_COUNT);
+        f = f * f;  // emphasize low end
+        float h = hash1(i);
+        osc += getSmoothBand(f)
+             * sin(f * (x + u_time * 500.0 * h));
+    }
+    return osc / BANDS_COUNT;
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    // normalized [0,1]
-    vec2 uv0 = fragCoord / u_resolution;
-    // center & aspect‐correct
-    vec2 uv = uv0*2.0 - 1.0;
-    uv.x *= u_resolution.x / u_resolution.y;
+    vec2 res = u_resolution;
+    // normalized coords, centered and aspect-correct
+    vec2 uv = (2.0 * fragCoord - res) / res.x;
+    // horizontal scroll over time
+    uv.x += u_time * 0.5;
 
-    // polar coords
-    float r = length(uv);
-    float theta = atan(uv.y, uv.x) + PI; 
-    // map θ→[0,1]
-    float t = theta / (2.0*PI);
+    // pixel size
+    float ps = 1.0 / min(res.x, res.y);
 
-    // our “signal” radius and amplitude
-    float signal = sampleSignal(t);
-    float ampl   = sampleAmpl();
+    // compute waveform
+    float wave = getOsc(uv.x) * AMPLITUDE;
 
-    // build a soft ring at radius=signal
-    float dist = abs(r - signal);
-    float v    = 1.0 - pow(smoothstep(0.0, BLURR, dist), 0.01);
+    // compute edge thickness and antialias
+    float tgAlpha = clamp(fwidth(wave) * res.x * 0.5, 0.0, 8.0);
+    float vt = abs(uv.y - wave) / sqrt(tgAlpha*tgAlpha + 2.0);
 
-    // hue evolves with time & amplitude
-    float hue = pow(fract(abs(sin(theta*0.5) * ampl)), SHARPEN)
-              + u_time * 0.1;
+    // main line
+    float line = 1.0 - smoothstep(0.0, ps * LINE_WIDTH, vt);
+    line = smoothstep(0.0, 0.5, line);
 
-    // final color
-    vec3 col = v * hue2rgb(fract(hue));
+    // glow/blur
+    float blur = (1.0 - smoothstep(
+        0.0,
+        ps * LINE_WIDTH * 32.0,
+        vt * 4.0
+    )) * 0.2;
 
-    fragColor = vec4(col, 1.0);
+    float v = line + blur;
+    // you can modulate color by u_volume or u_high here if you like
+    fragColor = vec4(vec3(v), 1.0);
 }
 
-// for glslCanvas entrypoint
-void main(){
+void main() {
     mainImage(gl_FragColor, gl_FragCoord.xy);
 }
