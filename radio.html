@@ -9,21 +9,20 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="radio.css">
-  <script src="header.js"></script>
+  <!-- glslCanvas runtime -->
+  <script src="https://rawgit.com/patriciogonzalezvivo/glslCanvas/master/dist/GlslCanvas.js"></script>
 </head>
 <body class="bg-black text-white overflow-hidden">
-  <div class="dynamic-background z-background fixed top-0 left-0 w-full h-full"></div>
+  <!-- full-screen shader canvas -->
+  <canvas id="bgCanvas" class="dynamic-background z-background fixed top-0 left-0 w-full h-full"></canvas>
 
   <main class="relative z-base flex h-screen">
-    <!-- Sidebar: song list -->
     <aside class="w-1/4 bg-black bg-opacity-60 backdrop-blur-sm p-6 overflow-y-auto">
       <h2 class="font-mono uppercase tracking-wider mb-4 text-lg">Playlist</h2>
       <ul id="song-list" class="space-y-2"></ul>
     </aside>
 
-    <!-- Player area -->
     <section class="flex-1 flex flex-col items-center justify-center relative p-8">
-      <canvas id="visualizer" class="absolute top-0 left-0 w-full h-full"></canvas>
       <div class="player-container backdrop-blur-sm bg-black bg-opacity-50 border border-gray-800 rounded-2xl p-8 relative z-10 w-full max-w-xl">
         <div class="mb-4">
           <h1 id="song-title" class="text-3xl font-spacegrotesk uppercase tracking-wide"></h1>
@@ -35,6 +34,30 @@
       </div>
     </section>
   </main>
+
+  <!-- embed your fragment shader-->
+  <script id="fragShader" type="x-shader/x-fragment">
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2    u_resolution;
+uniform float   u_time;
+uniform float   u_low;
+uniform float   u_mid;
+uniform float   u_high;
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+  // swirling base
+  float t = u_time * 0.2;
+  vec2 p = uv - 0.5;
+  float angle = atan(p.y, p.x) + t + (u_low * 2.0);
+  float radius = length(p) * 2.0 + (u_mid * 0.5);
+  vec3 col = 0.5 + 0.5 * cos(vec3(angle, angle + 2.0, angle + 4.0) + radius * 6.2831 + u_high);
+  gl_FragColor = vec4(col, 1.0);
+}
+  </script>
 
   <script src="radio.js"></script>
 </body>

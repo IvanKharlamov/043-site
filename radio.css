@@ -1,5 +1,12 @@
 /* radio.css */
-/* Sidebar */
+
+/* full-screen shader canvas falls back to a simple gradient if JS fails */
+.dynamic-background {
+  background: radial-gradient(circle at center, #111, #000);
+  display: block;
+}
+
+/* Sidebar styling */
 aside {
   border-right: 1px solid rgba(255,255,255,0.1);
 }
@@ -8,6 +15,7 @@ aside {
   padding: 0.5rem;
   border-radius: 0.25rem;
   transition: background 0.3s;
+  font-family: 'IBM Plex Mono', monospace;
 }
 #song-list li:hover,
 #song-list li.active {
@@ -21,19 +29,4 @@ aside {
 audio::-webkit-media-controls-panel {
   background: transparent;
   backdrop-filter: blur(8px);
-}
-
-/* Canvas visualizer sits behind player */
-#visualizer {
-  z-index: 0;
-}
-
-/* Dynamic‐background fallback (in case JS fails) */
-.dynamic-background {
-  background: radial-gradient(circle at center, #111, #000);
-}
-
-/* Ensure the canvas covers full viewport */
-canvas {
-  display: block;
 }

@@ -1,94 +1,85 @@
 // radio.js
 (async () => {
-  const listEl = document.getElementById('song-list');
-  const titleEl = document.getElementById('song-title');
-  const descEl  = document.getElementById('song-desc');
-  const audio   = document.getElementById('audio');
-  const canvas  = document.getElementById('visualizer');
-  const ctx     = canvas.getContext('2d');
+  // DOM refs
+  const listEl   = document.getElementById('song-list');
+  const titleEl  = document.getElementById('song-title');
+  const descEl   = document.getElementById('song-desc');
+  const audio    = document.getElementById('audio');
+  const canvas   = document.getElementById('bgCanvas');
 
-  // Resize canvas to fill
+  // init glslCanvas
+  const sandbox = new GlslCanvas(canvas);
+  const fragSrc = document.getElementById('fragShader').textContent;
+  sandbox.load(fragSrc);
+
+  // resize handler
   function resize() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
+    sandbox.setUniform('u_resolution', [canvas.width = window.innerWidth, canvas.height = window.innerHeight]);
   }
   window.addEventListener('resize', resize);
   resize();
 
-  // Load playlist JSON
+  // load JSON playlist
   const { songs } = await fetch('json/radio.json').then(r => r.json());
-
-  // Populate sidebar
-  songs.forEach((s, i) => {
+  songs.forEach((s,i) => {
     const li = document.createElement('li');
     li.textContent = s.title;
-    li.classList.add('font-mono');
-    li.addEventListener('click', () => selectSong(i));
+    li.onclick = () => selectSong(i);
     listEl.append(li);
   });
 
-  let currentIndex = 0;
-  let analyser, dataArray, bufferLength;
+  let analyser, dataArray, bufLen;
 
-  // Switch to a given song
   function selectSong(idx) {
-    currentIndex = idx;
+    // highlight
+    listEl.querySelectorAll('li').forEach((li,i) => li.classList.toggle('active', i===idx));
     const s = songs[idx];
-    // highlight active
-    listEl.querySelectorAll('li').forEach((li, i) => {
-      li.classList.toggle('active', i === idx);
-    });
     titleEl.textContent = s.title;
     descEl.textContent  = s.description;
     audio.src = s.src;
     audio.play();
   }
 
-  // Set up Web Audio API analyser
-  function setupVisualizer() {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const srcNode  = audioCtx.createMediaElementSource(audio);
-    analyser = audioCtx.createAnalyser();
-    srcNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    analyser.fftSize = 256;
-    bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
-    draw();
+  function setupAudio() {
+    const ctx    = new (window.AudioContext||window.webkitAudioContext)();
+    const src    = ctx.createMediaElementSource(audio);
+    analyser     = ctx.createAnalyser();
+    src.connect(analyser);
+    analyser.connect(ctx.destination);
+    analyser.fftSize = 512;
+    bufLen     = analyser.frequencyBinCount;
+    dataArray  = new Uint8Array(bufLen);
+    animate();
   }
 
-  function draw() {
-    requestAnimationFrame(draw);
+  // helper: average of array slice
+  function avg(arr, start, end) {
+    let sum=0, cnt=0;
+    for(let i=start;i<end;i++){ sum += arr[i]; cnt++; }
+    return sum/cnt/255;
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
     analyser.getByteFrequencyData(dataArray);
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0,0,w,h);
+    // split low/mid/high
+    const low  = avg(dataArray, 0,         bufLen/3|0);
+    const mid  = avg(dataArray, bufLen/3|0, 2*bufLen/3|0);
+    const high = avg(dataArray, 2*bufLen/3|0, bufLen);
+    const t = performance.now()*0.001;
 
-    // simple radial bars
-    const radius = Math.min(w,h) / 8;
-    const cx = w/2, cy = h/2;
-    const step = (Math.PI * 2) / bufferLength;
-    dataArray.forEach((v, i) => {
-      const angle = i * step;
-      const len = (v / 255) * radius;
-      const x1 = cx + Math.cos(angle) * radius;
-      const y1 = cy + Math.sin(angle) * radius;
-      const x2 = cx + Math.cos(angle) * (radius + len);
-      const y2 = cy + Math.sin(angle) * (radius + len);
-      ctx.strokeStyle = `hsla(${angle*180/Math.PI},80%,60%,0.5)`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x1,y1);
-      ctx.lineTo(x2,y2);
-      ctx.stroke();
-    });
+    // push into shader
+    sandbox.setUniform('u_time', t);
+    sandbox.setUniform('u_low', low);
+    sandbox.setUniform('u_mid', mid);
+    sandbox.setUniform('u_high', high);
   }
 
-  // init
+  // start analyser on first play
   audio.addEventListener('play', () => {
-    if (!analyser) setupVisualizer();
+    if (!analyser) setupAudio();
   });
 
-  // start with first song
+  // kick off with first track
   selectSong(0);
 })();
