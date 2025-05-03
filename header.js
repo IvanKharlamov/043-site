@@ -1,6 +1,6 @@
 const navLinks = [
     { text: 'read&watch', href: '#' },
-    { text: 'radio', href: '#' },
+    { text: 'radio', href: 'radio.html' },
     { text: 'about', href: '#' },
     { text: 'index', href: 'index.html' },
     { text: 'archive', href: 'archive.html' }
