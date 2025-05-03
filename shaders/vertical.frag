@@ -22,22 +22,22 @@ float tri(float x){
 }
 vec2 tri2(vec2 p){
     return vec2(
-        tri(p.x + tri(p.y*2.0)),
-        tri(p.y + tri(p.x*2.0))
+        tri(p.x + tri(p.y * 2.0)),
+        tri(p.y + tri(p.x * 2.0))
     );
 }
 const mat2 M2 = mat2(
-    0.970,  0.242,
-   -0.242,  0.970
+     0.970,  0.242,
+    -0.242,  0.970
 );
 
-// triangle‐noise (background detail)
+// subtle background noise
 float triangleNoise(vec2 p){
-    float z=1.5, z2=1.5, rz=0.0;
+    float z = 1.5, z2 = 1.5, rz = 0.0;
     vec2 bp = p * 0.8;
     for(int i=0; i<4; i++){
-        vec2 dg = tri2(bp*2.0)*0.5;
-        dg = dg * rot(u_time*4.5);
+        vec2 dg = tri2(bp*2.0) * 0.5;
+        dg = dg * rot(u_time * 4.5);
         p  += dg / z2;
         bp *= 1.5; z2 *= 0.6; z *= 1.7;
         p  = p * 1.2 * M2;
@@ -46,63 +46,70 @@ float triangleNoise(vec2 p){
     return clamp(rz, 0.0, 1.0);
 }
 
-// segment distance with audio‐driven “wave” from mid‐band
+// filament segment distance, audio‐driven by mid band
 float segm(vec2 p, vec2 a, vec2 b, float nz){
     vec2 pa = p - a;
     vec2 ba = b - a;
     float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0)
             + nz*0.017;
-    float waveZ = u_mid;  // replace textureLod(...).z
-    vec2 disp = pa 
-              - waveZ*0.015*(h - 1.0) 
+    float waveAmp = u_mid;  // mid‐band controls displacement
+    vec2 disp = pa
+              - waveAmp*0.015*(h - 1.0)
               - ba*h;
-    return length(disp) * waveZ * 7.0 * waveZ;
+    return length(disp) * waveAmp * 7.0 * waveAmp;
 }
 
-vec3 render(vec2 p){
-    // average spectral energy for scaling
-    float waveW = (u_low + u_mid + u_high) / 3.0;
-    float nz    = triangleNoise(p);
-    vec2 p1     = vec2(-1.0, 0.0);
-    vec3 col    = vec3(0.0);
+// build all filaments (no brightness scaling here)
+vec3 renderFilaments(vec2 p){
+    float nz = triangleNoise(p);
+    vec2 p1 = vec2(-1.0, 0.0);
+    vec3 col = vec3(0.0);
 
-    // scale and slowly scroll the field
-    p /= (waveW + 0.5 + u_time*0.001);
+    // scale & slow scroll by time
+    p /= (0.5 + u_time*0.001);
 
     for(int i=0; i<100; i++){
-        // rotate the anchor
+        // rotate the anchor slowly
         float a1 = 0.05 + pow(u_time*2.25,1.5)*0.0007;
         p1 = rot(a1) * p1;
 
-        // branch direction
+        // branch direction rotates with time + mid‐band
         float ang = 0.04*float(i) - u_time*1.575 - u_mid*1.5;
         vec2 p2 = rot(ang) * p1;
 
-        // distance along the filament
+        // compute distance to this filament piece
         float d = segm(p, p1, p2, nz);
 
-        // color modulation by time and branch index
-        vec3 sineMod = abs(sin(vec3(
+        // color modulated over time & branch index
+        vec3 tone = abs(sin(vec3(
             0.6 + sin(u_time*0.05)*0.4,
             1.5,
             2.0
         ) + float(i)*0.011 + u_time*0.8));
 
-        col += sineMod * (0.0015 / pow(d, 1.2));
+        col += tone * (0.0015 / pow(d, 1.2));
     }
 
-    // brighten when the track is loud
-    return col * waveW;
+    return col;
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    // NDC coords
     vec2 uv = fragCoord.xy / u_resolution * 2.0 - 1.0;
     uv.x *= u_resolution.x / u_resolution.y * 0.9;
-    vec3 c = render(uv * 0.75);
 
-    // subtle vignette
+    // get the raw filaments
+    vec3 c = renderFilaments(uv * 0.75);
+
+    // now **brightness‐scale by volume** (0 → black, 1 → full brightness)
+    c *= u_volume;
+
+    // vignette to darken edges
     vec2 luv = fragCoord.xy / u_resolution;
-    float vig = pow(16.0*luv.x*luv.y*(1.0-luv.x)*(1.0-luv.y), 0.1)*0.5 + 0.5;
+    float vig = pow(
+      16.0 * luv.x * luv.y * (1.0 - luv.x) * (1.0 - luv.y),
+      0.1
+    ) * 0.5 + 0.5;
     c *= vig;
 
     fragColor = vec4(c, 1.0);
