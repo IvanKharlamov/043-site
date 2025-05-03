@@ -51,9 +51,9 @@ float segm(vec2 p, vec2 a, vec2 b, float nz) {
     vec2 pa = p - a;
     vec2 ba = b - a;
     float h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0) + nz*0.017;
-    float waveAmp = u_mid;  // mid-band for displacement
+    float waveAmp = clamp(u_mid, 0.1, 1.0);  // mid-band for displacement, with minimum value
     vec2 disp = pa - waveAmp*0.015*(h - 1.0) - ba*h;
-    return length(disp) * waveAmp * 7.0 * waveAmp;
+    return length(disp) * (0.5 + waveAmp * 3.5);  // Modified amplitude scaling
 }
 
 // draw all filaments
@@ -71,7 +71,7 @@ vec3 renderFilaments(vec2 p) {
         p1 = rot(a1) * p1;
 
         // branch direction modulated by mid
-        float ang = 0.04*float(i) - u_time*1.575 - u_mid*1.5;
+        float ang = 0.04*float(i) - u_time*1.575 - max(0.1, u_mid)*1.5;
         vec2 p2 = rot(ang) * p1;
 
         // distance to this segment
@@ -84,7 +84,8 @@ vec3 renderFilaments(vec2 p) {
             2.0
         ) + float(i)*0.011 + u_time*0.8));
 
-        col += tone * (0.0015 / pow(d, 1.2));
+        // Add small base value to prevent complete darkness
+        col += tone * (0.0015 / pow(max(d, 0.01), 1.2));
     }
 
     return col;
@@ -97,12 +98,16 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     // raw filament color
     vec3 c = renderFilaments(uv * 0.75);
-
-    // **apply squared volume** for softer fade-in
-    float v = u_volume * u_volume;
-
-    // modulate brightness and **clamp** to [0,1]
-    c = clamp(c * v, 0.0, 1.0);
+    
+    // Apply proper volume scaling
+    // Ensure volume stays in a reasonable range (never goes to zero completely)
+    float v = clamp(u_volume, 0.01, 1.0);
+    
+    // Apply volume in a way that decreases brightness as volume decreases
+    c = c * v;
+    
+    // Apply proper clamping AFTER volume adjustment
+    c = clamp(c, vec3(0.0), vec3(1.0));
 
     // subtle vignette
     vec2 luv = fragCoord.xy / u_resolution;
