@@ -5,59 +5,66 @@ precision mediump float;
 
 uniform vec2  u_resolution;
 uniform float u_time;
-uniform float u_low;     // bass band
-uniform float u_mid;     // mid band
-uniform float u_high;    // treble band
-uniform float u_volume;  // overall RMS loudness
+uniform float u_low;      // bass band
+uniform float u_mid;      // mid band
+uniform float u_high;     // treble band
+uniform float u_volume;   // overall loudness
 
 #define TAU 6.28318530718
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord){
-    // Normalized, centered coords with aspect correction
-    vec2 uv = fragCoord.xy / u_resolution * 2.0 - 1.0;
+// Soft fill inside ring
+float asFilled(float d) {
+    return 1.0 - smoothstep(0.0, 0.01, d);
+}
+
+// Pick one of our three bands based on normalized freq ∈ [0,1]
+float sampleFreq(float f) {
+    if (f < 1.0/3.0)      return u_low;
+    else if (f < 2.0/3.0) return u_mid;
+    else                  return u_high;
+}
+
+// Ring signed‐distance: radius + audio bump per slice
+float oEye(vec2 xy, float radius, float range, float slices) {
+    float angle = atan(xy.x, xy.y)/TAU + 0.5;
+    float idx   = floor(angle * slices);
+    float norm  = idx / slices;
+    float lvl   = sampleFreq(norm);
+    return length(xy) - (radius + lvl * range);
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // UV in [-1,1], aspect‐corrected
+    vec2 uv = fragCoord.xy / u_resolution.xy * 2.0 - 1.0;
     uv.x *= u_resolution.x / u_resolution.y;
 
-    vec3 col = vec3(0.0);
-    const int L = 64; // number of filaments
+    // First ring: 50 slices, neon magenta→cyan
+    float d1 = oEye(uv, 0.5, 0.5, 50.0);
+    float t1 = clamp(1.0 + d1, 0.0, 1.0);
+    vec3 col1 = mix(
+        vec3(1.0, 0.0, 1.0),   // magenta
+        vec3(0.0, 1.0, 1.0),   // cyan
+        t1
+    );
 
-    // Two neon endpoint colors
-    vec3 neonA = vec3(1.0, 0.2, 0.8); // hot pink
-    vec3 neonB = vec3(0.2, 1.0, 0.5); // neon green
+    // Second ring: 100 slices, cyan→yellow
+    float d2 = oEye(uv, 0.5, 0.5, 100.0);
+    float t2 = clamp(1.0 + d2, 0.0, 1.0);
+    vec3 col2 = mix(
+        vec3(0.0, 1.0, 1.0),   // cyan
+        vec3(1.0, 1.0, 0.0),   // yellow
+        t2
+    );
 
-    // Loop over each filament
-    for(int i = 0; i < L; i++){
-        float fi = float(i) / float(L);
-        // angle for this filament, rotating over time
-        float angle = fi * TAU + u_time * 0.2;
-        vec2 dir = vec2(cos(angle), sin(angle));
+    // Combine & mask inside first ring
+    float mask = asFilled(d1);
 
-        // amplitude along this filament mixes low→high by fi
-        float amp = mix(u_low, u_high, fi);
-
-        // base radius controlled by mids
-        float baseR = mix(0.2, 0.6, u_mid);
-        float r = baseR + amp * 0.3;
-
-        // distance from point to this radial line at radius r
-        float d = abs(dot(uv, dir) - r);
-
-        // filament thickness in screen‐space
-        float thickness = 0.0015;
-        // anti‐aliased line
-        float line = smoothstep(thickness, 0.0, d);
-
-        // color for this filament
-        vec3 cI = mix(neonA, neonB, fi);
-
-        // accumulate
-        col += cI * line;
-    }
-
-    // overall brightness from volume (soft squared falloff)
+    // Volume drives overall brightness (squared for smoothness)
     float v = u_volume * u_volume;
-    col *= v;
 
-    // optional vignette to darken edges
+    vec3 col = (col1 + col2) * mask * v;
+
+    // subtle vignette
     vec2 luv = fragCoord.xy / u_resolution;
     float vig = pow(
       16.0 * luv.x * luv.y * (1.0 - luv.x) * (1.0 - luv.y),
