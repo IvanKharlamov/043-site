@@ -19,7 +19,7 @@
       "shader": "shaders/circular.frag"
     },
     {
-      "title": "Track Two alt 2",
+      "title": "Track Two alt два",
       "description": "Upbeat follow-up.",
       "src": "audio/track2.mp3",
       "shader": "shaders/vertical.frag"
