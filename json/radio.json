@@ -25,7 +25,7 @@
       "shader": "shaders/filaments.frag"
     },
     {
-      "title": "Ful stop",
+      "title": "Ful sstop",
       "description": "A foul-tasting medicine.",
       "src": "audio/fulstop.mp3",
       "shader": "shaders/simple.frag"
