@@ -76,7 +76,8 @@
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#network-overlay line {
+#network-overlay line,
+#network-overlay path {
   transition: all 1.2s ease;
 }
 
@@ -93,6 +94,7 @@ circle {
 }
 
 /* Line transitions */
-line {
+line,
+path {
   transition: opacity 0.4s ease;
 }
