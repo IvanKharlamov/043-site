@@ -1,4 +1,3 @@
-// radio.js
 (async () => {
   // DOM refs
   const listEl        = document.getElementById('song-list');
@@ -34,16 +33,38 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
+  // ——— fade-pause: gradual volume decrease over 0.5s ———
+  function fadePause() {
+    const duration = 500; // ms
+    const startVol = audio.volume;
+    const startTime = performance.now();
+    function fade() {
+      const now = performance.now();
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      audio.volume = startVol * (1 - t);
+      volumeSlider.value = audio.volume;
+      if (t < 1) {
+        requestAnimationFrame(fade);
+      } else {
+        audio.pause();
+        // restore original volume for next play
+        audio.volume = startVol;
+        volumeSlider.value = startVol;
+      }
+    }
+    fade();
+  }
 
-	playBtn.addEventListener('click', () => {
-	  if (audio.paused) audio.play();
-	  else               audio.pause();
-	});
+  // play/pause cross-fade
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play();
+    else              fadePause();
+  });
 
-	// keep the button-state in sync with actual playback
-	audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
-	audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
-
+  // keep the button-state in sync with actual playback
+  audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
+  audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
 
   // format time as M:SS
   function fmt(t) {
@@ -206,6 +227,7 @@
   // Kick everything off on any mouse move or when playback starts
   document.addEventListener('mousemove', resetInactivityTimer);
   audio.addEventListener('play', resetInactivityTimer);
+
 
   // start first track
   selectSong(0);
