@@ -68,6 +68,18 @@ function simpleHash(str) {
   return Math.abs(hash);
 }
 
+// Quadratic Bézier “d” generator
+function quadCurveD(x1, y1, x2, y2, offset = 50) {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  const ux = -dy / len, uy = dx / len;   // unit perpendicular
+  const cx = mx + ux * offset;
+  const cy = my + uy * offset;
+  return `M ${x1},${y1} Q ${cx},${cy} ${x2},${y2}`;
+}
+
 // Calculate positions for network nodes
 function calculateNetworkPositions(member) {
   const memberId = member.id;
@@ -90,9 +102,8 @@ function calculateNetworkPositions(member) {
   const screenDiagonal = Math.sqrt(svgWidth * svgWidth + svgHeight * svgHeight);
   const proximityThreshold = screenDiagonal * CONFIG.PROXIMITY_THRESHOLD_PERCENT;
   
-  // Calculate how many points should be on the right side (90%)
+  // Calculate how many points should be on the right side
   const rightSidePointCount = Math.round(pointCount * CONFIG.RIGHT_SIDE_RATIO);
-  const randomPointCount = pointCount - rightSidePointCount;
   
   // Calculate the Y-axis bounds for the central area
   const centralYStart = svgHeight * CONFIG.CENTER_Y_OFFSET;
@@ -111,7 +122,7 @@ function calculateNetworkPositions(member) {
     // Create unique seed for each point
     const pointSeed = simpleHash(`${seedSource}-${i}-${baseSeed}`);
     
-    // Determine if this point should be in the structured group (right side, central Y)
+    // Determine if this point should be in the structured group
     const isStructured = i < rightSidePointCount;
     pointGroups[i] = isStructured ? 'structured' : 'random';
     
@@ -119,17 +130,12 @@ function calculateNetworkPositions(member) {
     let x, y;
     
     if (isStructured) {
-      // RIGHT SIDE + CENTRAL Y points
-      // X position: Between RIGHT_SIDE_THRESHOLD and right edge
       const rightSideWidth = svgWidth * (1 - CONFIG.RIGHT_SIDE_THRESHOLD);
       x = svgWidth * CONFIG.RIGHT_SIDE_THRESHOLD + CONFIG.MIN_POINT_MARGIN + 
           ((pointSeed * 17) % 997) / 997 * (rightSideWidth - (CONFIG.MIN_POINT_MARGIN * 2));
-      
-      // Y position: Central 70% of the screen
       y = centralYStart + CONFIG.MIN_POINT_MARGIN + 
           ((pointSeed * 31) % 991) / 991 * (centralYHeight - (CONFIG.MIN_POINT_MARGIN * 2));
     } else {
-      // FULLY RANDOM points (anywhere on screen)
       x = CONFIG.MIN_POINT_MARGIN + 
           ((pointSeed * 17) % 997) / 997 * (svgWidth - (CONFIG.MIN_POINT_MARGIN * 2));
       y = CONFIG.MIN_POINT_MARGIN + 
@@ -140,7 +146,6 @@ function calculateNetworkPositions(member) {
     const sizeSeed = simpleHash(`${memberId}-${memberName}-size-${i}`);
     const sizeVariation = sizeSeed % 100;
     
-    // Use tiered sizing approach from config
     let radius;
     for (const tier of CONFIG.DOT_SIZE_TIERS) {
       if (sizeVariation < tier.threshold) {
@@ -153,7 +158,6 @@ function calculateNetworkPositions(member) {
     // Add opacity variation
     const opacity = CONFIG.MIN_DOT_OPACITY + (sizeSeed % 5) * CONFIG.OPACITY_STEP;
     
-    // Add point data with group information
     points.push({ 
       x, 
       y, 
@@ -169,41 +173,24 @@ function calculateNetworkPositions(member) {
   const connections = [];
   const connectionCount = Math.floor(pointCount * CONFIG.CONNECTION_RATIO);
   
-  // Create a lookup of points by group
   const structuredPoints = [];
   const randomPoints = [];
-  
-  // Separate points into groups and store their indices
-  points.forEach((point, index) => {
-    if (point.group === 'structured') {
-      structuredPoints.push(index);
-    } else {
-      randomPoints.push(index);
-    }
+  points.forEach((pt, idx) => {
+    pt.group === 'structured' ? structuredPoints.push(idx) : randomPoints.push(idx);
   });
   
-  // 1. First, generate seed-based connections for structured points
+  // Structured–structured
   for (let i = 0; i < connectionCount; i++) {
-    // Use structured points as the base for these connections
     if (i >= structuredPoints.length) continue;
-    
-    const startIndex = structuredPoints[i % structuredPoints.length];
-    
-    // Use different properties to determine connections
-    const connectSeed = simpleHash(`${memberId}-${memberName}-conn-${i}`);
-    
-    // For structured points, only connect to other structured points
+    const a = structuredPoints[i % structuredPoints.length];
+    const seed = simpleHash(`${memberId}-${memberName}-conn-${i}`);
     if (structuredPoints.length > 1) {
-      const structuredIndex = i % structuredPoints.length;
-      let offset = 1 + (connectSeed % (structuredPoints.length - 1));
-      const connectToIndex = structuredPoints[(structuredIndex + offset) % structuredPoints.length];
-      
-      if (startIndex !== connectToIndex) {
+      const off = 1 + (seed % (structuredPoints.length - 1));
+      const b = structuredPoints[(i + off) % structuredPoints.length];
+      if (a !== b) {
         connections.push({
-          x1: points[startIndex].x,
-          y1: points[startIndex].y,
-          x2: points[connectToIndex].x,
-          y2: points[connectToIndex].y,
+          x1: points[a].x, y1: points[a].y,
+          x2: points[b].x, y2: points[b].y,
           id: `connection-structured-${i}`,
           type: 'structured'
         });
@@ -211,36 +198,20 @@ function calculateNetworkPositions(member) {
     }
   }
   
-  // 2. Generate proximity-based connections for random points
-  // For each random point, connect to other random points within the proximity threshold
-  const proximityConnections = new Set(); // To track unique connections
-  
+  // Proximity–random
+  const seen = new Set();
   for (let i = 0; i < randomPoints.length; i++) {
-    const pointA = randomPoints[i];
-    
     for (let j = i + 1; j < randomPoints.length; j++) {
-      const pointB = randomPoints[j];
-      
-      // Calculate distance between the two points
-      const dx = points[pointA].x - points[pointB].x;
-      const dy = points[pointA].y - points[pointB].y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // If points are within the proximity threshold, create a connection
-      if (distance <= proximityThreshold) {
-        // Create a unique ID for the connection to avoid duplicates
-        const connectionId = `proximity-${Math.min(pointA, pointB)}-${Math.max(pointA, pointB)}`;
-        
-        if (!proximityConnections.has(connectionId)) {
-          proximityConnections.add(connectionId);
-          
+      const p = randomPoints[i], q = randomPoints[j];
+      const dx = points[p].x - points[q].x, dy = points[p].y - points[q].y;
+      if (Math.hypot(dx, dy) <= proximityThreshold) {
+        const cid = `proximity-${Math.min(p,q)}-${Math.max(p,q)}`;
+        if (!seen.has(cid)) {
+          seen.add(cid);
           connections.push({
-            x1: points[pointA].x,
-            y1: points[pointA].y,
-            x2: points[pointB].x,
-            y2: points[pointB].y,
-            id: connectionId,
-            type: 'proximity'
+            x1: points[p].x, y1: points[p].y,
+            x2: points[q].x, y2: points[q].y,
+            id: cid, type: 'proximity'
           });
         }
       }
@@ -252,7 +223,6 @@ function calculateNetworkPositions(member) {
 
 // Update the network visualization based on member data
 function updateNetworkVisualization(member) {
-  // Clear any pending line display timeouts to fix the bug
   if (lineDisplayTimeout) {
     clearTimeout(lineDisplayTimeout);
     lineDisplayTimeout = null;
@@ -260,100 +230,69 @@ function updateNetworkVisualization(member) {
 
   const { points, connections } = calculateNetworkPositions(member);
   const existingNodes = {};
-  
-  // First, remove all existing lines immediately when changing profiles
-  const lines = networkSvg.querySelectorAll('line');
-  lines.forEach(line => {
-    if (line.parentNode) {
-      line.parentNode.removeChild(line);
-    }
-  });
-  
-  // Store existing elements for dots
-  const circles = networkSvg.querySelectorAll('circle');
-  circles.forEach(circle => {
-    existingNodes[circle.getAttribute('data-id')] = circle;
+
+  // Remove existing curves
+  networkSvg.querySelectorAll('path').forEach(p => p.remove());
+
+  // Cache existing circles
+  networkSvg.querySelectorAll('circle').forEach(c => {
+    existingNodes[c.getAttribute('data-id')] = c;
   });
 
-  // Create/update points first
-  points.forEach((point, index) => {
-    let circle;
-    
-    if (existingNodes[point.id] && index < prevPoints.length) {
-      // Update existing node
-      circle = existingNodes[point.id];
-      
-      // Animate to new position
-      circle.setAttribute('cx', point.x);
-      circle.setAttribute('cy', point.y);
-      circle.setAttribute('r', point.radius);
+  // Draw/update dots
+  points.forEach((pt, i) => {
+    let circle = existingNodes[pt.id];
+    if (circle && i < prevPoints.length) {
+      circle.setAttribute('cx', pt.x);
+      circle.setAttribute('cy', pt.y);
+      circle.setAttribute('r', pt.radius);
     } else {
-      // Create new node
-      circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', point.x);
-      circle.setAttribute('cy', point.y);
-      circle.setAttribute('r', point.radius);
-      circle.setAttribute('fill', '#fff');
-      circle.setAttribute('class', point.animClass);
-      circle.setAttribute('style', `animation-delay: ${(index * 0.05) % 2}s; opacity: 0;`);
-      circle.setAttribute('data-id', point.id);
-      circle.setAttribute('data-group', point.group);
-      
+      circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      circle.setAttribute('cx', pt.x);
+      circle.setAttribute('cy', pt.y);
+      circle.setAttribute('r', pt.radius);
+      circle.setAttribute('fill','#fff');
+      circle.setAttribute('class', pt.animClass);
+      circle.setAttribute('style', `animation-delay:${(i*0.05)%2}s;opacity:0`);
+      circle.setAttribute('data-id', pt.id);
+      circle.setAttribute('data-group', pt.group);
       networkSvg.appendChild(circle);
-      
-      // Fade in
-      setTimeout(() => {
-        circle.style.opacity = point.opacity;
-      }, CONFIG.DOT_FADE_DELAY_BASE + index * CONFIG.DOT_FADE_DELAY_STEP);
+      setTimeout(() => circle.style.opacity = pt.opacity,
+                 CONFIG.DOT_FADE_DELAY_BASE + i * CONFIG.DOT_FADE_DELAY_STEP);
     }
   });
-  
-  // Remove nodes that aren't needed anymore
-  if (prevPoints.length > 0) {
-    const currentIds = points.map(p => p.id);
-    
+
+  // Remove stale dots
+  if (prevPoints.length) {
+    const keep = new Set(points.map(p=>p.id));
     Object.keys(existingNodes).forEach(id => {
-      if (!currentIds.includes(id)) {
-        const circle = existingNodes[id];
-        // Fade out and remove
-        circle.style.opacity = 0;
-        setTimeout(() => {
-          if (circle.parentNode) {
-            circle.parentNode.removeChild(circle);
-          }
-        }, CONFIG.DOT_REMOVAL_TIME); // Match the transition duration
+      if (!keep.has(id)) {
+        const c = existingNodes[id];
+        c.style.opacity = 0;
+        setTimeout(() => c.remove(), CONFIG.DOT_REMOVAL_TIME);
       }
     });
   }
-  
-  // Add a delay before creating connections - wait for dots to move
-  // Store the timeout ID so we can clear it if user changes profile before lines appear
+
+  // Draw curves after dots settle
   lineDisplayTimeout = setTimeout(() => {
-    // Create connections with more prominence
-    connections.forEach((conn, index) => {
-      // Create new connection
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', conn.x1);
-      line.setAttribute('y1', conn.y1);
-      line.setAttribute('x2', conn.x2);
-      line.setAttribute('y2', conn.y2);
-      line.setAttribute('stroke', '#fff');
-      line.setAttribute('stroke-width', CONFIG.CONNECTION_STROKE_WIDTH);
-      line.setAttribute('data-id', conn.id);
-      line.setAttribute('data-type', conn.type || 'default');
-      line.setAttribute('style', 'opacity: 0;');
-      
-      networkSvg.appendChild(line);
-      
-      // Fade in with delay - prioritize proximity connections to appear first
-      const delayMultiplier = conn.type === 'proximity' ? 0.5 : 1;
-      setTimeout(() => {
-        line.style.opacity = CONFIG.CONNECTION_OPACITY;
-      }, index * CONFIG.CONNECTION_FADE_DELAY_STEP * delayMultiplier); // Sequential appearance
+    connections.forEach((conn, i) => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d', quadCurveD(conn.x1, conn.y1, conn.x2, conn.y2, 40));
+      p.setAttribute('fill','none');
+      p.setAttribute('stroke','#fff');
+      p.setAttribute('stroke-width', CONFIG.CONNECTION_STROKE_WIDTH);
+      p.setAttribute('data-id', conn.id);
+      p.setAttribute('data-type', conn.type || 'default');
+      p.setAttribute('style','opacity:0');
+      networkSvg.appendChild(p);
+
+      const mult = conn.type === 'proximity' ? 0.5 : 1;
+      setTimeout(() => p.style.opacity = CONFIG.CONNECTION_OPACITY,
+                 i * CONFIG.CONNECTION_FADE_DELAY_STEP * mult);
     });
-  }, CONFIG.DOT_TRANSITION_TIME); // Wait for dots to move first
-  
-  // Update stored data for next transition
+  }, CONFIG.DOT_TRANSITION_TIME);
+
   prevPoints = [...points];
   prevConnections = [...connections];
 }
