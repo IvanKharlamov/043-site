@@ -201,7 +201,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
 /* smooth transitions for hide/show */
 aside,
 .player-container {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 /* when UI should be hidden */
