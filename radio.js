@@ -33,7 +33,7 @@
 
   // analyser config
   analyser.fftSize = 512;
-  const bufLen  = analyser.frequencyBinCount;
+  const bufLen   = analyser.frequencyBinCount;
   const freqData = new Uint8Array(bufLen);
   const timeData = new Uint8Array(analyser.fftSize);
 
@@ -69,11 +69,11 @@
     audio.currentTime = parseFloat(seekSlider.value);
   });
 
-  // keep play/pause icon in sync for programmatic calls
+  // keep play/pause icon in sync
   audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
   audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
 
-  // ——— Volume slider → volGain (user-controlled) ———
+  // ——— Volume slider → volGain ———
   volumeSlider.addEventListener('input', () => {
     const v = parseFloat(volumeSlider.value);
     volGain.gain.setValueAtTime(v, audioCtx.currentTime);
@@ -97,7 +97,7 @@
   document.addEventListener('mousemove', resetInactivityTimer);
   audio.addEventListener('play', resetInactivityTimer);
 
-  // ——— Fade-out + pause logic ———
+  // ——— Fade-out + pause logic (piecewise ramp to true zero) ———
   let fadeTimeout, isFading = false;
   const FADE_DUR = 0.5; // seconds
 
@@ -110,16 +110,23 @@
     fadeGain.gain.cancelScheduledValues(now);
     fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
 
-    // exponential ramp to near zero
-    fadeGain.gain.exponentialRampToValueAtTime(0.001, now + FADE_DUR);
+    // 1) exponential ramp down quickly to 0.01 by 80% of FADE_DUR
+    fadeGain.gain.exponentialRampToValueAtTime(
+      0.01,
+      now + FADE_DUR * 0.8
+    );
 
-    // after fade, actually pause and reset gain
+    // 2) linear ramp from 0.01 down to exact zero by end of FADE_DUR
+    fadeGain.gain.linearRampToValueAtTime(
+      0,
+      now + FADE_DUR
+    );
+
+    // 3) once fully faded, pause audio
     fadeTimeout = setTimeout(() => {
       audio.pause();
-      const t = audioCtx.currentTime;
-      fadeGain.gain.cancelScheduledValues(t);
-      fadeGain.gain.setValueAtTime(1, t);
       isFading = false;
+      // leave gain at 0 until next resume
     }, FADE_DUR * 1000);
   }
 
@@ -132,14 +139,15 @@
     isFading = false;
   }
 
-  // play/pause button click → fade logic
+  // play/pause button handler
   playBtn.addEventListener('click', () => {
     if (audio.paused) {
+      // RESUME: cancel any fade, restore gain, resume context, then play
       cancelFade();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       audio.play();
     } else {
-      // flip icon instantly
+      // PAUSE: flip icon instantly, then fade out and pause
       playBtn.classList.remove('button--active');
       fadeOutAndPause();
     }
@@ -183,7 +191,6 @@
     const thisLoad  = ++loadId;
     const startTime = Date.now();
 
-    // highlight in playlist
     listEl.querySelectorAll('li').forEach((li,i) => {
       li.classList.toggle('active', i === idx);
     });
@@ -195,9 +202,8 @@
 
     const shaderPromise = fetch(shader)
       .then(r => r.text())
-      .then(src  => sandbox.load(src));
+      .then(src => sandbox.load(src));
 
-    // immediate pause for a clean start
     audio.pause();
     audio.src = src;
     audio.load();
