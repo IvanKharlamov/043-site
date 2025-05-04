@@ -40,13 +40,14 @@
   // ——— Shader canvas setup ———
   const canvas  = document.getElementById('bgCanvas');
   const audioTexCanvas = document.createElement('canvas');
+	audioTexCanvas.id = 'audioTex';                // <<< assign an ID
   const FFT_SIZE = bufLen; // usually 256
   audioTexCanvas.width  = FFT_SIZE;
   audioTexCanvas.height = 2;
   audioTexCanvas.style.display = 'none';
   document.body.appendChild(audioTexCanvas);
-  const sandbox = new GlslCanvas(canvas, {
-   channels: [ audioTexCanvas ]
+ const sandbox = new GlslCanvas(canvas, {
+   channels: [ '#audioTex' ]                     // <<< use a CSS selector
  });
   function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
