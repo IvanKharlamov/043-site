@@ -55,21 +55,27 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // ——— fade-pause: gradual gain decrease over 0.5s ———
+  // ——— fade-pause: exponential/logarithmic gain decrease over 0.5s ———
   let isFading = false;
   function fadePause() {
     if (!gainNode) {
+      playBtn.classList.remove('button--active');
       audio.pause();
       return;
     }
     if (isFading) return;
     isFading = true;
 
+    // immediately switch icon
+    playBtn.classList.remove('button--active');
+
     const now = audioCtx.currentTime;
     gainNode.gain.cancelScheduledValues(now);
     gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-    gainNode.gain.linearRampToValueAtTime(0, now + 0.5);
+    // exponential ramp to a small epsilon for a log-like fade
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
 
+    // after ramp ends, pause and reset gain
     setTimeout(() => {
       audio.pause();
       gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -81,11 +87,11 @@
   // play/pause cross-fade
   playBtn.addEventListener('click', () => {
     if (audio.paused) {
-      if (isFading && gainNode) {
+      if (gainNode) {
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
         gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-        isFading = false;
       }
+      isFading = false;
       audio.play();
     } else {
       fadePause();
