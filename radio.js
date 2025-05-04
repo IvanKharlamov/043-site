@@ -55,8 +55,10 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // ——— fade-pause: exponential/logarithmic gain decrease over 0.5s ———
+  // ——— fade-pause: exponential/logarithmic gain decrease + clean cut ———
   let isFading = false;
+  const fadeDuration = 0.5;
+
   function fadePause() {
     if (!gainNode) {
       playBtn.classList.remove('button--active');
@@ -66,27 +68,32 @@
     if (isFading) return;
     isFading = true;
 
-    // immediately switch icon
+    // switch icon instantly
     playBtn.classList.remove('button--active');
 
     const now = audioCtx.currentTime;
     gainNode.gain.cancelScheduledValues(now);
-    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-    // exponential ramp to a small epsilon for a log-like fade
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    gainNode.gain.setValueAtTime(gainNode.gain.value || 1, now);
+    // exponential/log ramp
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + fadeDuration);
+    // ensure absolute zero at end to avoid residual noise
+    gainNode.gain.setValueAtTime(0, now + fadeDuration);
 
-    // after ramp ends, pause and reset gain
     setTimeout(() => {
+      // pause audio then suspend context
       audio.pause();
+      audioCtx.suspend();
+      // reset gain for next play
       gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
       gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
       isFading = false;
-    }, 500);
+    }, fadeDuration * 1000);
   }
 
   // play/pause cross-fade
   playBtn.addEventListener('click', () => {
     if (audio.paused) {
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       if (gainNode) {
         gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
         gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
@@ -175,31 +182,36 @@
   async function selectSong(idx) {
     const thisLoad  = ++loadId;
     const startTime = Date.now();
-    listEl.querySelectorAll('li').forEach((li,i) => li.classList.toggle('active', i===idx));
+    listEl.querySelectorAll('li').forEach((li,i) => li.classList.toggle('active', i === idx));
     const { title, description, src, shader } = songs[idx];
     titleEl.textContent = title;
     descEl.textContent  = description;
     loadingEl.classList.remove('hidden');
-    const shaderPromise = fetch(shader).then(r=>r.text()).then(src=>sandbox.load(src));
+    const shaderPromise = fetch(shader).then(r => r.text()).then(src => sandbox.load(src));
     audio.pause();
-    audio.src = src; audio.load();
+    audio.src = src;
+    audio.load();
     const audioPromise = new Promise(res => {
       const onCan = () => { audio.removeEventListener('canplaythrough', onCan); res(); };
       audio.addEventListener('canplaythrough', onCan);
       setTimeout(onCan, 3000);
     });
     await Promise.all([shaderPromise, audioPromise]);
-    if (thisLoad!==loadId) return;
+    if (thisLoad !== loadId) return;
     const elapsed = Date.now() - startTime;
-    if (elapsed<1000) { await new Promise(r=>setTimeout(r,1000-elapsed)); if (thisLoad!==loadId) return; }
+    if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+    if (thisLoad !== loadId) return;
     loadingEl.classList.add('hidden');
     audio.play();
   }
 
-  // load playlist and initialize
-  const { songs } = await fetch('json/radio.json').then(r=>r.json());
-  songs.forEach((s,i)=>{ const li = document.createElement('li'); li.textContent = s.title; li.addEventListener('click', ()=>selectSong(i)); listEl.append(li); });
-  audio.addEventListener('play', ()=>{ if (!analyser) setupAudioAnalyser(); });
-  // start first track
+  const { songs } = await fetch('json/radio.json').then(r => r.json());
+  songs.forEach((s,i) => {
+    const li = document.createElement('li');
+    li.textContent = s.title;
+    li.addEventListener('click', () => selectSong(i));
+    listEl.append(li);
+  });
+  audio.addEventListener('play', () => { if (!analyser) setupAudioAnalyser(); });
   selectSong(0);
 })();
