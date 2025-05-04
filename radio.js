@@ -1,5 +1,6 @@
+// radio.js
 (async () => {
-  // DOM refs
+  // ——— DOM refs ———
   const listEl        = document.getElementById('song-list');
   const titleEl       = document.getElementById('song-title');
   const descEl        = document.getElementById('song-desc');
@@ -10,42 +11,35 @@
   const seekSlider    = document.getElementById('seek-slider');
   const volumeSlider  = document.getElementById('volume-slider');
 
-  // create & configure audio element
+  // ——— Audio element + Web Audio graph ———
   const audio = new Audio();
   audio.crossOrigin = 'anonymous';
 
-  // for canceling stale loads
-  let loadId = 0;
+  const audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+  const srcNode   = audioCtx.createMediaElementSource(audio);
+  const fadeGain  = audioCtx.createGain();    // for fade-out
+  const analyser  = audioCtx.createAnalyser(); // for shader uniforms
+  const volGain   = audioCtx.createGain();    // for user volume slider
 
-  // Web Audio analyser + buffers + fade gain
-  let analyser, bufLen, freqData, timeData, gainNode, audioCtx;
+  // chain: audio → fadeGain → analyser → volGain → output
+  srcNode.connect(fadeGain);
+  fadeGain.connect(analyser);
+  analyser.connect(volGain);
+  volGain.connect(audioCtx.destination);
 
-  // inactivity timer for auto-hide UI
-  let inactivityTimer;
-  function resetInactivityTimer() {
-    document.body.classList.remove('hide-ui');
-    clearTimeout(inactivityTimer);
-    if (!audio.paused) {
-      inactivityTimer = setTimeout(() => {
-        document.body.classList.add('hide-ui');
-      }, 4000);
-    }
-  }
+  // initial gains
+  fadeGain.gain.setValueAtTime(1, audioCtx.currentTime);
+  volGain.gain.setValueAtTime(1, audioCtx.currentTime);
 
-  // always show UI on pause
-  audio.addEventListener('pause', () => {
-    clearTimeout(inactivityTimer);
-    document.body.classList.remove('hide-ui');
-  });
+  // analyser config
+  analyser.fftSize = 512;
+  const bufLen  = analyser.frequencyBinCount;
+  const freqData = new Uint8Array(bufLen);
+  const timeData = new Uint8Array(analyser.fftSize);
 
-  // kick off auto-hide on mouse move and playback start
-  document.addEventListener('mousemove', resetInactivityTimer);
-  audio.addEventListener('play', resetInactivityTimer);
-
-  // setup shader canvas
+  // ——— Shader canvas setup ———
   const canvas  = document.getElementById('bgCanvas');
   const sandbox = new GlslCanvas(canvas);
-
   function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
     canvas.width  = w;
@@ -55,66 +49,14 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // ——— fade-pause: exponential/logarithmic gain decrease + clean cut ———
-  let isFading = false;
-  const fadeDuration = 0.5;
-
-  function fadePause() {
-    if (!gainNode) {
-      playBtn.classList.remove('button--active');
-      audio.pause();
-      return;
-    }
-    if (isFading) return;
-    isFading = true;
-
-    // switch icon instantly
-    playBtn.classList.remove('button--active');
-
-    const now = audioCtx.currentTime;
-    gainNode.gain.cancelScheduledValues(now);
-    gainNode.gain.setValueAtTime(gainNode.gain.value || 1, now);
-    // exponential/log ramp
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + fadeDuration);
-    // ensure absolute zero at end to avoid residual noise
-    gainNode.gain.setValueAtTime(0, now + fadeDuration);
-
-    setTimeout(() => {
-      // pause audio then suspend context
-      audio.pause();
-      audioCtx.suspend();
-      // reset gain for next play
-      gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-      isFading = false;
-    }, fadeDuration * 1000);
-  }
-
-  // play/pause cross-fade
-  playBtn.addEventListener('click', () => {
-    if (audio.paused) {
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      if (gainNode) {
-        gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-      }
-      isFading = false;
-      audio.play();
-    } else {
-      fadePause();
-    }
-  });
-
-  // keep the button-state in sync with actual playback
-  audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
-  audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
-
-  // format time as M:SS
+  // ——— Time formatting ———
   function fmt(t) {
     const m = Math.floor(t/60),
           s = Math.floor(t%60).toString().padStart(2,'0');
     return `${m}:${s}`;
   }
+
+  // ——— Audio element events ———
   audio.addEventListener('loadedmetadata', () => {
     durationEl.textContent = fmt(audio.duration);
     seekSlider.max         = audio.duration;
@@ -127,25 +69,97 @@
     audio.currentTime = parseFloat(seekSlider.value);
   });
 
-  // volume control (independent of fade)
+  // keep play/pause icon in sync for programmatic calls
+  audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
+  audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
+
+  // ——— Volume slider → volGain (user-controlled) ———
   volumeSlider.addEventListener('input', () => {
-    audio.volume = parseFloat(volumeSlider.value);
+    const v = parseFloat(volumeSlider.value);
+    volGain.gain.setValueAtTime(v, audioCtx.currentTime);
   });
 
-  // helper: average of freq bins
+  // ——— Inactivity timer for auto-hide UI ———
+  let inactivityTimer;
+  function resetInactivityTimer() {
+    document.body.classList.remove('hide-ui');
+    clearTimeout(inactivityTimer);
+    if (!audio.paused) {
+      inactivityTimer = setTimeout(() => {
+        document.body.classList.add('hide-ui');
+      }, 4000);
+    }
+  }
+  audio.addEventListener('pause', () => {
+    clearTimeout(inactivityTimer);
+    document.body.classList.remove('hide-ui');
+  });
+  document.addEventListener('mousemove', resetInactivityTimer);
+  audio.addEventListener('play', resetInactivityTimer);
+
+  // ——— Fade-out + pause logic ———
+  let fadeTimeout, isFading = false;
+  const FADE_DUR = 0.5; // seconds
+
+  function fadeOutAndPause() {
+    if (isFading) return;
+    isFading = true;
+    const now = audioCtx.currentTime;
+
+    // lock in current gain
+    fadeGain.gain.cancelScheduledValues(now);
+    fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
+
+    // exponential ramp to near zero
+    fadeGain.gain.exponentialRampToValueAtTime(0.001, now + FADE_DUR);
+
+    // after fade, actually pause and reset gain
+    fadeTimeout = setTimeout(() => {
+      audio.pause();
+      const t = audioCtx.currentTime;
+      fadeGain.gain.cancelScheduledValues(t);
+      fadeGain.gain.setValueAtTime(1, t);
+      isFading = false;
+    }, FADE_DUR * 1000);
+  }
+
+  function cancelFade() {
+    if (!isFading) return;
+    clearTimeout(fadeTimeout);
+    const now = audioCtx.currentTime;
+    fadeGain.gain.cancelScheduledValues(now);
+    fadeGain.gain.setValueAtTime(1, now);
+    isFading = false;
+  }
+
+  // play/pause button click → fade logic
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) {
+      cancelFade();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      audio.play();
+    } else {
+      // flip icon instantly
+      playBtn.classList.remove('button--active');
+      fadeOutAndPause();
+    }
+  });
+
+  // ——— Shader uniforms render loop ———
   function avg(arr, start, end) {
     let s = 0;
     for (let i = start; i < end; i++) s += arr[i];
     return s / ((end - start) || 1) / 255;
   }
 
-  // animation loop: feed uniforms to shader
   function renderLoop() {
     requestAnimationFrame(renderLoop);
+
     analyser.getByteFrequencyData(freqData);
     const low  = avg(freqData, 0,           bufLen/3|0);
     const mid  = avg(freqData, bufLen/3|0,  2*bufLen/3|0);
     const high = avg(freqData, 2*bufLen/3|0, bufLen);
+
     analyser.getByteTimeDomainData(timeData);
     let sumSq = 0;
     for (let i = 0; i < timeData.length; i++) {
@@ -153,6 +167,7 @@
       sumSq += x*x;
     }
     const rms = Math.sqrt(sumSq / timeData.length);
+
     const t = performance.now() * 0.001;
     sandbox.setUniform('u_time',   t);
     sandbox.setUniform('u_low',    low);
@@ -160,58 +175,62 @@
     sandbox.setUniform('u_high',   high);
     sandbox.setUniform('u_volume', rms);
   }
+  renderLoop();
 
-  // initialize Web Audio analyser
-  function setupAudioAnalyser() {
-    audioCtx   = new (window.AudioContext||window.webkitAudioContext)();
-    const srcNode = audioCtx.createMediaElementSource(audio);
-    analyser   = audioCtx.createAnalyser();
-    gainNode   = audioCtx.createGain();
-    srcNode.connect(analyser);
-    analyser.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    analyser.fftSize = 512;
-    bufLen   = analyser.frequencyBinCount;
-    freqData = new Uint8Array(bufLen);
-    timeData = new Uint8Array(analyser.fftSize);
-    gainNode.gain.value = 1;
-    renderLoop();
-  }
-
-  // select & load a track with ≥1s enforced load and cancelation
+  // ——— Track loading + selectSong ———
+  let loadId = 0;
   async function selectSong(idx) {
     const thisLoad  = ++loadId;
     const startTime = Date.now();
-    listEl.querySelectorAll('li').forEach((li,i) => li.classList.toggle('active', i === idx));
+
+    // highlight in playlist
+    listEl.querySelectorAll('li').forEach((li,i) => {
+      li.classList.toggle('active', i === idx);
+    });
     const { title, description, src, shader } = songs[idx];
     titleEl.textContent = title;
     descEl.textContent  = description;
+
     loadingEl.classList.remove('hidden');
-    const shaderPromise = fetch(shader).then(r => r.text()).then(src => sandbox.load(src));
+
+    const shaderPromise = fetch(shader)
+      .then(r => r.text())
+      .then(src  => sandbox.load(src));
+
+    // immediate pause for a clean start
     audio.pause();
     audio.src = src;
     audio.load();
     const audioPromise = new Promise(res => {
-      const onCan = () => { audio.removeEventListener('canplaythrough', onCan); res(); };
+      const onCan = () => {
+        audio.removeEventListener('canplaythrough', onCan);
+        res();
+      };
       audio.addEventListener('canplaythrough', onCan);
       setTimeout(onCan, 3000);
     });
+
     await Promise.all([shaderPromise, audioPromise]);
     if (thisLoad !== loadId) return;
+
     const elapsed = Date.now() - startTime;
-    if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
-    if (thisLoad !== loadId) return;
+    if (elapsed < 1000) {
+      await new Promise(r => setTimeout(r, 1000 - elapsed));
+      if (thisLoad !== loadId) return;
+    }
+
     loadingEl.classList.add('hidden');
     audio.play();
   }
 
   const { songs } = await fetch('json/radio.json').then(r => r.json());
-  songs.forEach((s,i) => {
+  songs.forEach((s, i) => {
     const li = document.createElement('li');
     li.textContent = s.title;
     li.addEventListener('click', () => selectSong(i));
     listEl.append(li);
   });
-  audio.addEventListener('play', () => { if (!analyser) setupAudioAnalyser(); });
+
+  // start first track
   selectSong(0);
 })();
