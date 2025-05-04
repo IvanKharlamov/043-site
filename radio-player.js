@@ -1,7 +1,7 @@
 // radio-player.js
 
 (async () => {
-  // ——— DOM references ———
+  // ——— DOM refs ———
   const listEl        = document.getElementById('song-list');
   const titleEl       = document.getElementById('song-title');
   const descEl        = document.getElementById('song-desc');
@@ -16,7 +16,7 @@
   // ——— Audio + Web Audio graph ———
   const audio    = new Audio();
   audio.crossOrigin = 'anonymous';
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
   const srcNode  = audioCtx.createMediaElementSource(audio);
   const fadeGain = audioCtx.createGain();
   const analyser = audioCtx.createAnalyser();
@@ -26,21 +26,20 @@
   fadeGain.connect(analyser);
   analyser.connect(volGain);
   volGain.connect(audioCtx.destination);
-
   fadeGain.gain.setValueAtTime(1, audioCtx.currentTime);
   volGain.gain.setValueAtTime(1, audioCtx.currentTime);
 
-  // ——— Initialize the visualizer ———
-  RadioVisualizer.init(canvas, analyser, audioCtx);
+  // ——— Instantiate our visualizer ———
+  const visualizer = RadioVisualizer.create(canvas, analyser, audioCtx);
 
-  // ——— Time formatter ———
+  // ——— Time formatting ———
   function fmt(t) {
-    const m = Math.floor(t / 60),
-          s = String(Math.floor(t % 60)).padStart(2, '0');
+    const m = Math.floor(t/60),
+          s = String(Math.floor(t%60)).padStart(2,'0');
     return `${m}:${s}`;
   }
 
-  // ——— Audio element events ———
+  // ——— Audio events ———
   audio.addEventListener('loadedmetadata', () => {
     durationEl.textContent = fmt(audio.duration);
     seekSlider.max         = audio.duration;
@@ -55,12 +54,12 @@
   audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
   audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
 
-  // ——— Volume control ———
+  // ——— Volume slider ———
   volumeSlider.addEventListener('input', () => {
     volGain.gain.setValueAtTime(parseFloat(volumeSlider.value), audioCtx.currentTime);
   });
 
-  // ——— Inactivity UI hide ———
+  // ——— Inactivity auto-hide UI ———
   let inactivityTimer;
   function resetInactivityTimer() {
     document.body.classList.remove('hide-ui');
@@ -78,16 +77,16 @@
   document.addEventListener('mousemove', resetInactivityTimer);
   audio.addEventListener('play', resetInactivityTimer);
 
-  // ——— Fade-out + pause logic ———
+  // ——— Fade‐out + pause logic ———
   let fadeTimeout, isFading = false;
-  const FADE_DUR = 0.5; // seconds
+  const FADE_DUR = 0.5;
   function fadeOutAndPause() {
     if (isFading) return;
     isFading = true;
     const now = audioCtx.currentTime;
     fadeGain.gain.cancelScheduledValues(now);
     fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
-    fadeGain.gain.exponentialRampToValueAtTime(0.01, now + FADE_DUR * 0.8);
+    fadeGain.gain.exponentialRampToValueAtTime(0.01, now + FADE_DUR*0.8);
     fadeGain.gain.linearRampToValueAtTime(0,        now + FADE_DUR);
     fadeTimeout = setTimeout(() => {
       audio.pause();
@@ -111,57 +110,62 @@
     }
   });
 
-  // ——— Playlist loading & selectSong ———
+  // ——— Playlist + selectSong (now loads per-track shader) ———
   let loadId = 0;
   async function selectSong(idx) {
-    const thisLoad  = ++loadId;
+    const thisLoad = ++loadId;
     const startTime = Date.now();
 
-    // highlight
+    // highlight selection
     listEl.querySelectorAll('li').forEach((li,i) => {
       li.classList.toggle('active', i === idx);
     });
-    const { title, description, src } = songs[idx];
+    const { title, description, src, shader } = songs[idx];
     titleEl.textContent = title;
     descEl.textContent  = description;
     loadingEl.classList.remove('hidden');
 
-    // load audio
+    // prepare audio
     audio.pause();
     audio.src = src;
     audio.load();
-    await Promise.race([
-      new Promise(res => {
-        const onCan = () => {
-          audio.removeEventListener('canplaythrough', onCan);
-          res();
-        };
-        audio.addEventListener('canplaythrough', onCan);
-        setTimeout(onCan, 3000);
-      }),
-      new Promise(r => setTimeout(r, 5000))
-    ]);
+    const audioPromise = new Promise(res => {
+      const onCan = () => {
+        audio.removeEventListener('canplaythrough', onCan);
+        res();
+      };
+      audio.addEventListener('canplaythrough', onCan);
+      setTimeout(onCan, 3000);
+    });
+
+    // fetch & compile fragment-shader for this track
+    const shaderPromise = visualizer.loadShader(shader);
+
+    // wait both
+    await Promise.all([audioPromise, shaderPromise]);
     if (thisLoad !== loadId) return;
 
-    // ensure at least 1s spinner
+    // enforce 1s minimum spinner
     const elapsed = Date.now() - startTime;
-    if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
-    if (thisLoad !== loadId) return;
+    if (elapsed < 1000) {
+      await new Promise(r => setTimeout(r, 1000 - elapsed));
+      if (thisLoad !== loadId) return;
+    }
 
     loadingEl.classList.add('hidden');
     if (audioCtx.state === 'suspended') await audioCtx.resume();
     audio.play();
   }
 
-  // fetch & render playlist
+  // fetch playlist JSON
   const { songs } = await fetch('json/radio.json').then(r => r.json());
-  songs.forEach((s, i) => {
+  songs.forEach((s,i) => {
     const li = document.createElement('li');
     li.textContent = s.title;
     li.addEventListener('click', () => selectSong(i));
     listEl.append(li);
   });
 
-  // Optionally: start first track automatically
+  // (un-comment to auto-start first track)
   // selectSong(0);
 })();
