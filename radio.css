@@ -40,42 +40,41 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   color: #ccc;
 }
 
-/* Player container at bottom, full width */
-.player-container {
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.5);
-  backdrop-blur: blur(10px);
-  padding: 1rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Play/Pause Button - stylized */
+/* play/pause cross-fade */
 .btn-control {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
 }
 .btn-control svg {
-  width: 2rem;
-  height: 2rem;
-  transition: transform .2s ease;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  transition: opacity 0.3s ease;
 }
-.btn-control:hover svg {
-  transform: scale(1.2);
-}
-.btn-control.playing svg {
-  /* Add rotation animation when playing */
-  animation: spin 1s linear infinite;
-}
+.btn-control .icon-play  { opacity: 1; }
+.btn-control .icon-pause { opacity: 0; }
+.btn-control.playing .icon-play  { opacity: 0; }
+.btn-control.playing .icon-pause { opacity: 1; }
 
-/* Reuse spinner keyframes for button */
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* reposition player so it’s always visible above bottom */
+.player-container {
+  position: absolute;
+  bottom: 4rem;           /* lift it up a bit */
+  left: 25%;              /* to the right of the w-1/4 sidebar */
+  width: 75%;             /* fill the rest */
+  max-width: none;        /* override any previous max-width */
+  z-index: 20;            /* above the shader canvas */
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.5);
+  padding: 2rem;
+  text-align: center;
 }
 
 /* Loading overlay */
