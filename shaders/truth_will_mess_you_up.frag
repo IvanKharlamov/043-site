@@ -4,16 +4,24 @@ precision mediump float;
 
 uniform vec2  u_resolution;
 uniform float u_time;
-uniform float u_low;     // bass  [0..1]
-uniform float u_mid;     // mids  [0..1]
-uniform float u_high;    // treble[0..1]
-uniform float u_volume;  // RMS   [0..1]
+uniform float u_low;     // bass
+uniform float u_mid;     // mids
+uniform float u_high;    // treble
+uniform float u_volume;  // overall loudness
 
-#define PI     3.1415927
-#define TWO_PI 6.283185
+#define PI        3.1415927
+#define TWO_PI    6.283185
+#define FREQ_STEP 0.001953125
 
-// HSL → RGB (from IQ)
-vec3 hsl2rgb(vec3 c){
+// pick a band value from [0..1]
+float getBand(float t) {
+    if (t < 0.33)      return u_low;
+    else if (t < 0.66) return u_mid;
+    else               return u_high;
+}
+
+// HSL→RGB for mid‐driven hue
+vec3 hsl2rgb(vec3 c) {
     vec3 rgb = clamp(
       abs(mod(c.x*6.0 + vec3(0.,4.,2.), 6.0) - 3.0) - 1.0,
       0.0, 1.0
@@ -21,54 +29,81 @@ vec3 hsl2rgb(vec3 c){
     return c.z + c.y*(rgb - 0.5)*(1.0 - abs(2.0*c.z - 1.0));
 }
 
-// compute a single-ring pattern + glow
-float ringPattern(in vec2 uv, in float radius, in float sharpness){
-    float d = abs(length(uv) - radius);
-    return smoothstep(sharpness, 0.0, d);
-}
-float ringGlow(in vec2 uv, in float radius, in float sharpness){
-    float d = abs(length(uv) - radius);
-    return smoothstep(sharpness*3.0, 0.0, d);
-}
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 res = u_resolution;
+    float ps = 1.0 / min(res.x, res.y);
 
-void mainImage(out vec4 fragColour, in vec2 fragCoord){
-    // NDC coords, center-origin
-    vec2 uv0 = (fragCoord*2.0 - u_resolution) / u_resolution.y;
+    // base UV (centered, scaled)
+    vec2 uv0 = (2.0*fragCoord - res)*0.6/min(res.x,res.y);
+    uv0.x = abs(uv0.x);
+    uv0.y *= -1.0;
 
-    // smooth “zoom” with volume
-    float scale = mix(1.0, 3.0, smoothstep(0.1, 1.0, u_volume));
-    vec2 uv = uv0 * scale;
-
-    // ring params
-    float baseRadius  = 0.3;                        // base ring radius
-    float ringRadius  = baseRadius + u_volume * 0.2; // volume pushes it out
-    float sharpness   = mix(0.2, 0.01, u_low);       // bass → smoother(0.2) to sharper(0.01)
-    float glowAmt     = u_high;                     // treble → glow strength
+    // volume “pulse” shrinking
+    float vp = smoothstep(0.3,1.1,u_volume)*0.7;
+    vec2 uvPulse = uv0 * (1.0 - vp);
 
     // chromatic aberration offset
-    vec2 dir   = normalize(uv0 + 1e-6);
-    float chroma = 0.02 * u_high;
+    float ca = u_high * 0.02;
+    vec2 dir = normalize(uv0 + 1e-6);
 
-    // sample three channels separately
-    float r = ringPattern(uv - dir*chroma, ringRadius, sharpness)
-            + glowAmt * ringGlow(uv - dir*chroma, ringRadius, sharpness);
-    float g = ringPattern(uv,                  ringRadius, sharpness)
-            + glowAmt * ringGlow(uv,                  ringRadius, sharpness);
-    float b = ringPattern(uv + dir*chroma, ringRadius, sharpness)
-            + glowAmt * ringGlow(uv + dir*chroma, ringRadius, sharpness);
+    // prepare three UVs
+    vec2 uvR = uvPulse * (1.0 + ca);
+    vec2 uvG = uvPulse;
+    vec2 uvB = uvPulse * (1.0 - ca);
 
-    vec3 brightness = vec3(r,g,b);
+    // one function to do the original ring logic per‐UV
+    float ringLogic(vec2 uv) {
+        // polar coords
+        vec2 p = vec2(length(uv), atan(uv.y,uv.x)/TWO_PI);
+        p.y = fract((p.y + 0.2)*0.8);
+        // “frequency” amplitude at that angle
+        float volF = getBand(p.y);
+        // shape it
+        float vol = pow(smoothstep(0.0,0.9,volF), 4.0/max(u_volume,0.01))*0.1;
+        // distance
+        float d = vol - p.x + 0.2;
 
-    // hue from mids
+        float outCol = 0.0;
+        // main line
+        float thr = 1.0 - ps*(1.5 + u_low*1.0); // bass→sharper
+        outCol += smoothstep(thr, 1.0, 1.0 - abs(d))
+                * smoothstep(-1.0,1.0,u_volume);
+
+        // blurred glow (treble→stronger)
+        outCol += u_high * 0.2 
+                * smoothstep(1.0 - 0.008*pow(u_volume*3.0+1.0,2.0), 1.0, 1.0 - abs(d));
+
+        // flash
+        outCol += pow(u_volume,8.0) * (1.0 - p.x);
+
+        // center fill
+        outCol += smoothstep(0.0,0.01,d) * (u_volume + 0.2);
+
+        // small rings
+        outCol += smoothstep(0.1,0.3,d) * smoothstep(0.1,0.8,u_volume*u_volume);
+
+        return outCol;
+    }
+
+    // compute each channel
+    float cR = ringLogic(uvR);
+    float cG = ringLogic(uvG);
+    float cB = ringLogic(uvB);
+    vec3 col = vec3(cR, cG, cB);
+
+    // mid‐driven hue palette
     float hue = fract(u_mid + u_time*0.05);
-    vec3 palette = hsl2rgb(vec3(hue, 1.0, 0.5));
+    vec3 pal  = hsl2rgb(vec3(hue, 1.0, 0.5));
 
-    // combine: palette * brightness, and kill at zero volume
-    vec3 col = palette * brightness * u_volume;
+    // tint by palette
+    col *= pal;
 
-    fragColour = vec4(col, 1.0);
+    // final volume multiplier (0 → black)
+    col *= u_volume;
+
+    fragColor = vec4(col, 1.0);
 }
 
-void main(){
+void main() {
     mainImage(gl_FragColor, gl_FragCoord.xy);
 }
