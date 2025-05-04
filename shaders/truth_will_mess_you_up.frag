@@ -6,84 +6,69 @@ precision mediump float;
 
 uniform vec2  u_resolution;
 uniform float u_time;
-uniform float u_low;     // bass  [0–1]
-uniform float u_mid;     // mids  [0–1]
-uniform float u_high;    // highs [0–1]
-uniform float u_volume;  // RMS   [0–1]
+uniform float u_low;     // bass band (0–1)
+uniform float u_mid;     // mids band (0–1)
+uniform float u_high;    // treble band (0–1)
+uniform float u_volume;  // RMS loudness (0–1)
 
-#define TWO_PI 6.28318530718
+#define PI     3.14159
+#define TWO_PI 6.28318
 const int blades = 6;
 
 // HSL → RGB (IQ’s method)
 vec3 hsl2rgb(vec3 c){
-    vec3 p = abs(mod(c.x*6.0 + vec3(0.0,4.0,2.0), 6.0) - 3.0) - 1.0;
+    vec3 p = abs(mod(c.x*6.0 + vec3(0,4,2), 6.0) - 3.0) - 1.0;
     return c.z + c.y * (p - 0.5) * (1.0 - abs(2.0*c.z - 1.0));
 }
 
-// pick one of the three bands based on normalized input [0,1]
-float sampleBand(float u){
-    if (u < 0.33) return u_low;
-    else if (u < 0.66) return u_mid;
-    else return u_high;
-}
+void mainImage(out vec4 fragColour, in vec2 fragCoord){
+    // normalized coords centered at 0, aspect‐correct
+    vec2 uv0 = (fragCoord*2.0 - u_resolution) / u_resolution.y;
 
-// compute the brightness of the kaleidoscopic ring at UV
-float brightnessAtUV(vec2 uv, float edgeW){
-    // angle + slow rotation
-    float ang = atan(uv.y, uv.x) + u_time;
-    float r   = length(uv);
+    // --- bass controls smoothness: lower bass = rough waves, higher bass = smoother ---
+    float freq = mix(25.0,  3.0, u_low);    // bass=0 → freq=25 (sharp); bass=1 → freq=3 (smooth)
+    float t    = u_time * 2.0;
 
-    // raw wedge shape
-    float raw = abs(fract(float(blades)*ang/TWO_PI)*2.0 - 1.0);
-    // smooth the wedge edges by bass
-    float slice = smoothstep(0.5-edgeW, 0.5+edgeW, raw);
-    float a     = slice * r;
+    // compute a base circular wave
+    float r0 = length(uv0);
+    float wave0 = sin(r0 * freq + t);
 
-    // mix radius vs. sampled ring position
-    float m1 = mix(r, 0.0, u_low);
-    float m2 = mix(m1, sampleBand(a), u_high);
-    float v  = pow(m2, 2.0);
-    float val = sampleBand(v);
+    // treble controls glow threshold and CA strength
+    float glow    = smoothstep(0.8, 1.0, abs(wave0)) * u_high * 2.0;
+    float brightness0 = wave0 * 0.5 + 0.5 + glow;
+    float caOff    = 0.01 * u_high;  // CA amplitude
 
-    // add glow from treble
-    val += u_high * 0.4;
-    return clamp(val, 0.0, 1.0);
-}
+    // mid controls hue
+    float hueBase = fract(u_mid);
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord){
-    // normalize coords
-    vec2 uv0 = (fragCoord * 2.0 - u_resolution) / u_resolution.y;
-
-    // zoom in/out smoothly by volume
-    float zmin = 1.0, zmax = 1.5;
-    float zoom = mix(zmin, zmax, smoothstep(0.0, 1.0, u_volume));
-    uv0 *= zoom;
-
-    // bass‐driven wedge edge width
-    float edgeW = mix(0.02, 0.15, u_low);
-
-    // chromatic aberration direction & amount
+    // --- chromatic aberration: offset uv per channel along radial ---
     vec2 dir = normalize(uv0);
-    float ca  = u_high * 0.02;
+    vec2 uvR = uv0 + dir * caOff;
+    vec2 uvG = uv0;
+    vec2 uvB = uv0 - dir * caOff;
 
-    // sample three slightly offset UVs
-    float vR = brightnessAtUV(uv0 + dir*ca, edgeW);
-    float vG = brightnessAtUV(uv0,              edgeW);
-    float vB = brightnessAtUV(uv0 - dir*ca, edgeW);
+    // recalc wave+glow per channel
+    float wR = sin(length(uvR)*freq + t);
+    float gR = smoothstep(0.8, 1.0, abs(wR)) * u_high * 2.0;
+    float bR = wR*0.5 + 0.5 + gR;
 
-    // hue purely from mids
-    float hue = fract(u_mid);
-    float sat = 1.0;
+    float wG = wave0;
+    float gG = glow;
+    float bG = brightness0;
 
-    // map each channel through the palette
-    vec3 cR = hsl2rgb(vec3(hue + 0.02, sat, vR*0.5 + 0.25));
-    vec3 cG = hsl2rgb(vec3(hue,         sat, vG*0.5 + 0.25));
-    vec3 cB = hsl2rgb(vec3(hue - 0.02, sat, vB*0.5 + 0.25));
+    float wB = sin(length(uvB)*freq + t);
+    float gB = smoothstep(0.8, 1.0, abs(wB)) * u_high * 2.0;
+    float bB = wB*0.5 + 0.5 + gB;
 
-    // assemble and fade in by volume
-    vec3 col = vec3(cR.r, cG.g, cB.b) * u_volume;
+    // palette color for each channel
+    vec3 colR = hsl2rgb(vec3(fract(hueBase + 0.02), 1.0, bR * 0.5 + 0.25));
+    vec3 colG = hsl2rgb(vec3(hueBase,           1.0, bG * 0.5 + 0.25));
+    vec3 colB = hsl2rgb(vec3(fract(hueBase - 0.02), 1.0, bB * 0.5 + 0.25));
 
-    fragColor = vec4(col, 1.0);
+    // assemble final color & scale by volume
+    vec3 col = vec3(colR.r, colG.g, colB.b) * u_volume;
+
+    fragColour = vec4(col, 1.0);
 }
 
 void main(){
