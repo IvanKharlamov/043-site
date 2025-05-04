@@ -152,7 +152,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
 
 /* “play” variant: circle + blue border */
 .button--play {
-  border: 3px solid #1e90ff;
+  border: 3px solid white;
   border-radius: 50%;
   position: relative;
   overflow: hidden;
@@ -163,7 +163,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   position: absolute;
   width: 6px;        /* 25px in your original, scaled to 40px container */
   height: 18px;      /* 75px → 40px */
-  background: #1e90ff;
+  background: white;
   transition: 
     clip-path 300ms ease-in-out,
     transform  300ms ease-in-out;
