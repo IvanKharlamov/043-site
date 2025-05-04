@@ -181,6 +181,31 @@
   audio.addEventListener('play', () => {
     if (!analyser) setupAudioAnalyser();
   });
+  
+    // ——— auto-hide UI on inactivity ———
+
+  let inactivityTimer;
+
+  // Show immediately, then (if playing) schedule hide in 4s
+  function resetInactivityTimer() {
+    document.body.classList.remove('hide-ui');
+    clearTimeout(inactivityTimer);
+    if (!audio.paused) {
+      inactivityTimer = setTimeout(() => {
+        document.body.classList.add('hide-ui');
+      }, 4000);
+    }
+  }
+
+  // Always show UI on pause
+  audio.addEventListener('pause', () => {
+    clearTimeout(inactivityTimer);
+    document.body.classList.remove('hide-ui');
+  });
+
+  // Kick everything off on any mouse move or when playback starts
+  document.addEventListener('mousemove', resetInactivityTimer);
+  audio.addEventListener('play', resetInactivityTimer);
 
   // start first track
   selectSong(0);

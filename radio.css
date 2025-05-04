@@ -197,3 +197,20 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   clip-path: polygon(50% 15%,100% 15%,100% 85%,50% 85%);
   transform: translate(-50%, -50%) translateX(2.5px);
 }
+
+/* smooth transitions for hide/show */
+aside,
+.player-container {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* when UI should be hidden */
+.hide-ui aside {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.hide-ui .player-container {
+  transform: translateY(100%);
+  opacity: 0;
+}
