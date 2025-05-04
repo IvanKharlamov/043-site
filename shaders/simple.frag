@@ -1,0 +1,46 @@
+// shaders/simple.frag
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D iChannel0;   // the 2×FFT_SIZE audio texture we supply in JS
+uniform vec2      u_resolution;
+uniform float     u_time;
+
+// fetch one FFT bin (0…FFT_SIZE-1) from row 0 of our audio texture
+float amp(float freq) {
+    float x = freq / float( ${/* matches analyser.frequencyBinCount */ 256} );  // ensure this matches radio.js’s FFT_SIZE
+    return texture(iChannel0, vec2(x, 0.25)).r;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv    = fragCoord / u_resolution;
+    float ratio = u_resolution.y / u_resolution.x;
+    float c    = 1.0;
+
+    for(int i = 0; i < 100; i++) {
+        float f = float(i);
+        // fourth-power amplifier + offset
+        float a = 6.0 * pow(amp(f), 4.0) + 2.0;
+        // a little wobble in the centers
+        vec2 center = vec2(
+          0.5 + 0.03 * sin(f + u_time),
+          0.5 + 0.03 * cos(f + u_time) * ratio
+        );
+        // coordinate delta
+        vec2 dv = (uv - center) * vec2(1.0, ratio) * a * 1.1 * sin(f/40.0);
+        float len = length(dv);
+        // subtract a ring
+        c -= 0.19 
+           * step(0.491, len) 
+           * step(0.5, 1.0 - len);
+    }
+
+    vec3 base = vec3(0.35, 0.85713, 0.553123);
+    fragColor = vec4(base + c, 1.0);
+}
+
+void main(){
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}

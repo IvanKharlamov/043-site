@@ -28,7 +28,7 @@
       "title": "Ful Stop",
       "description": "A foul-tasting medicine.",
       "src": "audio/fulstop.mp3",
-      "shader": "shaders/truth_will_mess_you_up.frag"
+      "shader": "shaders/simple.frag"
     }
   ]
 }
