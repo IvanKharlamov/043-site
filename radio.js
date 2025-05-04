@@ -251,9 +251,6 @@
     }
 
     loadingEl.classList.add('hidden');
-	if (audioCtx.state === 'suspended') {
-	  await audioCtx.resume();
-	}
     audio.play();
   }
 
