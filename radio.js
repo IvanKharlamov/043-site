@@ -46,9 +46,9 @@
   audioTexCanvas.height = 2;
   audioTexCanvas.style.display = 'none';
   document.body.appendChild(audioTexCanvas);
-   const sandbox = new GlslCanvas(canvas);
-   // …then bind our offscreen audio‐texture canvas as channel 0
-   sandbox.setChannel(0, audioTexCanvas);
+ const sandbox = new GlslCanvas(canvas, {
+   channels: [ '#audioTex' ]                     // <<< use a CSS selector
+ });
   function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
     canvas.width  = w;
