@@ -6,69 +6,83 @@ precision mediump float;
 
 uniform vec2  u_resolution;
 uniform float u_time;
-uniform float u_low;     // bass band (0–1)
-uniform float u_mid;     // mids band (0–1)
-uniform float u_high;    // treble band (0–1)
-uniform float u_volume;  // RMS loudness (0–1)
+uniform float u_low;     // bass band
+uniform float u_mid;     // mid band
+uniform float u_high;    // treble band
+uniform float u_volume;  // RMS loudness
 
-#define PI     3.14159
-#define TWO_PI 6.28318
-const int blades = 6;
+#define PI       3.1415927
+#define TWO_PI   6.283185
 
-// HSL → RGB (IQ’s method)
-vec3 hsl2rgb(vec3 c){
-    vec3 p = abs(mod(c.x*6.0 + vec3(0,4,2), 6.0) - 3.0) - 1.0;
-    return c.z + c.y * (p - 0.5) * (1.0 - abs(2.0*c.z - 1.0));
+// choose between low/mid/high by position
+float getBand(float t){
+    if (t < 0.33)      return u_low;
+    else if (t < 0.66) return u_mid;
+    else               return u_high;
 }
 
-void mainImage(out vec4 fragColour, in vec2 fragCoord){
-    // normalized coords centered at 0, aspect‐correct
-    vec2 uv0 = (fragCoord*2.0 - u_resolution) / u_resolution.y;
-
-    // --- bass controls smoothness: lower bass = rough waves, higher bass = smoother ---
-    float freq = mix(25.0,  3.0, u_low);    // bass=0 → freq=25 (sharp); bass=1 → freq=3 (smooth)
-    float t    = u_time * 2.0;
-
-    // compute a base circular wave
-    float r0 = length(uv0);
-    float wave0 = sin(r0 * freq + t);
-
-    // treble controls glow threshold and CA strength
-    float glow    = smoothstep(0.8, 1.0, abs(wave0)) * u_high * 2.0;
-    float brightness0 = wave0 * 0.5 + 0.5 + glow;
-    float caOff    = 0.01 * u_high;  // CA amplitude
-
-    // mid controls hue
-    float hueBase = fract(u_mid);
-
-    // --- chromatic aberration: offset uv per channel along radial ---
-    vec2 dir = normalize(uv0);
-    vec2 uvR = uv0 + dir * caOff;
-    vec2 uvG = uv0;
-    vec2 uvB = uv0 - dir * caOff;
-
-    // recalc wave+glow per channel
-    float wR = sin(length(uvR)*freq + t);
-    float gR = smoothstep(0.8, 1.0, abs(wR)) * u_high * 2.0;
-    float bR = wR*0.5 + 0.5 + gR;
-
-    float wG = wave0;
-    float gG = glow;
-    float bG = brightness0;
-
-    float wB = sin(length(uvB)*freq + t);
-    float gB = smoothstep(0.8, 1.0, abs(wB)) * u_high * 2.0;
-    float bB = wB*0.5 + 0.5 + gB;
-
-    // palette color for each channel
-    vec3 colR = hsl2rgb(vec3(fract(hueBase + 0.02), 1.0, bR * 0.5 + 0.25));
-    vec3 colG = hsl2rgb(vec3(hueBase,           1.0, bG * 0.5 + 0.25));
-    vec3 colB = hsl2rgb(vec3(fract(hueBase - 0.02), 1.0, bB * 0.5 + 0.25));
-
-    // assemble final color & scale by volume
-    vec3 col = vec3(colR.r, colG.g, colB.b) * u_volume;
-
-    fragColour = vec4(col, 1.0);
+void mainImage(out vec4 fragColor, in vec2 fragCoord){
+    vec2 res = u_resolution;
+    
+    // centered & scaled UV
+    vec2 uv = (2.0 * fragCoord - res) * 0.6 / min(res.x, res.y);
+    uv.x = abs(uv.x);
+    uv.y = -uv.y;
+    
+    // pixel size
+    float ps = 1.0 / min(res.x, res.y);
+    
+    // overall volume pulse (shrinks when louder)
+    float avgVol = u_volume;
+    uv *= 1.0 - smoothstep(0.3, 1.1, avgVol) * 0.7;
+    
+    // polar coords: radius & “frequency angle”
+    vec2 p;
+    p.x = length(uv);
+    p.y = atan(uv.y, uv.x) / TWO_PI;
+    p.y = fract((p.y + 0.2) * 0.8);
+    
+    // spectrum intensity at this angle
+    float spec = getBand(p.y);
+    // sharpen and scale by avgVol
+    float vol = pow(smoothstep(0.0, 0.9, spec), 4.0 / max(avgVol,0.01)) * 0.1;
+    
+    // distance from the ring
+    float d = vol - p.x + 0.2;
+    
+    vec3 col = vec3(0.0);
+    
+    // main line (bright)
+    col += vec3(0.5,1.0,1.0)
+         * smoothstep(1.0 - ps*1.5, 1.0, 1.0 - abs(d))
+         * smoothstep(-1.0, 1.0, avgVol);
+    
+    // blurred halo
+    col += vec3(0.05,0.2,0.2)
+         * smoothstep(
+             1.0 - 0.008 * pow(avgVol*3.0 + 1.0, 2.0),
+             1.0,
+             1.0 - abs(d)
+           );
+    
+    // flash at center on beat
+    col += vec3(0.0,1.0,1.0)
+         * pow(avgVol, 8.0)
+         * (1.0 - p.x);
+    
+    // inner fill
+    col += vec3(0.0,0.1,0.1)
+         * smoothstep(0.0, 0.01, d)
+         * (avgVol + 0.2);
+    
+    // tiny ripple circles
+    float rings = sin(p.x * 50.0 + u_time * 2.0);
+    col += vec3(1.0)
+         * smoothstep(0.1, 0.3, d)
+         * smoothstep(0.1, 0.8, avgVol*avgVol)
+         * rings * 0.5;
+    
+    fragColor = vec4(col, 1.0);
 }
 
 void main(){
