@@ -1,8 +1,7 @@
 /* Shader canvas fallback */
 .dynamic-background {
   background: radial-gradient(circle at center, #111, #000);
-  left: 25%;
-  width: 75%;
+  width: 100%;
 }
 
 /* Sidebar */
@@ -66,7 +65,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
 /* reposition player so it’s always visible above bottom */
 .player-container {
   position: absolute;
-  bottom: 4rem;           /* lift it up a bit */
+  bottom: 52px;   
   width: 100%;      
   max-width: none;        /* override any previous max-width */
   z-index: 20;            /* above the shader canvas */
@@ -137,4 +136,113 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
 #volume-slider {
   flex: 0 0 80px;    /* don’t grow, don’t shrink, stay 80px wide */
   margin-left: .5rem;/* optional spacing */
+}
+
+/* play/pause morph button */
+.play-button {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* background circle (dark-mode accent) */
+.bg-circle {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  transition: background 200ms;
+  z-index: 1;
+}
+.play-button:active .bg-circle {
+  background: rgba(255,255,255,0.2);
+}
+
+/* the two halves of ▶ ❚❚ */
+.icon {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-120deg);
+  transition: transform 500ms;
+  z-index: 2;
+}
+.part-left,
+.part-right {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  transition: clip-path 500ms;
+}
+
+/* initial “▶” shape */
+.part-left {
+  clip-path: polygon(
+    43.7767% 55.8525%,43.7787% 55.4633%,43.7795% 55.0918%,43.7793% 54.7484%,
+    43.7786% 54.4439%,43.7774% 54.1886%,43.7763% 53.9933%,43.7753% 53.8683%,
+    43.7749% 53.8243%,43.7752% 53.5533%,43.7754% 53.2823%,43.7756% 53.0113%,
+    43.7758% 52.7403%,43.7761% 52.4693%,43.7763% 52.1983%,43.7765% 51.9273%,
+    43.7768% 51.6563%,43.7765% 51.3853%,43.7763% 51.1143%,43.7761% 50.8433%,
+    43.7759% 50.5723%,43.7756% 50.3014%,43.7754% 50.0304%,43.7752% 49.7594%,
+    43.7749% 49.4884%,44.4839% 49.4885%,45.1929% 49.4887%,45.9018% 49.4888%,
+    46.6108% 49.4889%,47.3198% 49.4891%,48.0287% 49.4892%,48.7377% 49.4893%,
+    49.4466% 49.4895%,50.7225% 49.4893%,51.9984% 49.4892%,53.2743% 49.4891%,
+    54.5502% 49.4889%,55.8261% 49.4888%,57.1020% 49.4887%,58.3779% 49.4885%,
+    59.6538% 49.4884%,59.5760% 49.8915%,59.3188% 50.2860%,58.8469% 50.7088%,
+    58.1246% 51.1971%,57.1164% 51.7879%,55.7870% 52.5183%,54.1007% 53.4252%,
+    52.0220% 54.5458%,49.9653% 55.6692%,48.3319% 56.5721%,47.0675% 57.2735%,
+    46.1174% 57.7919%,45.4272% 58.1462%,44.9424% 58.3551%,44.6083% 58.4373%,
+    44.3707% 58.4115%,44.1538% 58.2771%,43.9962% 58.0603%,43.8885% 57.7758%,
+    43.8215% 57.4383%,43.7861% 57.0625%,43.7730% 56.6631%,43.7730% 56.2549%
+  );
+}
+.part-right {
+  clip-path: polygon(
+    43.7767% 43.8304%,43.7787% 44.2196%,43.7795% 44.5911%,43.7793% 44.9344%,
+    43.7786% 45.2390%,43.7774% 45.4942%,43.7763% 45.6896%,43.7753% 45.8146%,
+    43.7749% 45.8586%,43.7752% 46.1296%,43.7754% 46.4006%,43.7756% 46.6716%,
+    43.7759% 46.9426%,43.7761% 47.2136%,43.7763% 47.4845%,43.7765% 47.7555%,
+    43.7768% 48.0265%,43.7765% 48.2975%,43.7763% 48.5685%,43.7761% 48.8395%,
+    43.7759% 49.1105%,43.7756% 49.3815%,43.7754% 49.6525%,43.7752% 49.9235%,
+    43.7749% 50.1945%,44.4839% 50.1944%,45.1929% 50.1942%,45.9018% 50.1941%,
+    46.6108% 50.1939%,47.3198% 50.1938%,48.0287% 50.1937%,48.7377% 50.1935%,
+    49.4466% 50.1934%,50.7225% 50.1935%,51.9984% 50.1937%,53.2743% 50.1938%,
+    54.5502% 50.1939%,55.8261% 50.1941%,57.1020% 50.1942%,58.3779% 50.1944%,
+    59.6538% 50.1945%,59.5760% 49.7914%,59.3188% 49.3969%,58.8469% 48.9740%,
+    58.1246% 48.4857%,57.1164% 47.8949%,55.7870% 47.1646%,54.1007% 46.2576%,
+    52.0220% 45.1370%,49.9653% 44.0137%,48.3319% 43.1107%,47.0675% 42.4094%,
+    46.1174% 41.8910%,45.4272% 41.5367%,44.9424% 41.3278%,44.6083% 41.2456%,
+    44.3707% 41.2714%,44.1538% 41.4058%,43.9962% 41.6226%,43.8885% 41.9071%,
+    43.8215% 42.2446%,43.7861% 42.6204%,43.7730% 43.0198%,43.7730% 43.4280%
+  );
+}
+
+/* toggled “❚❚” shape */
+.play-button.active .icon {
+  transform: rotate(-90deg);
+}
+.play-button.active .part-left {
+  clip-path: polygon(
+    /* (paste the “active .izquierda” polygon from your snippet here) */
+  );
+}
+.play-button.active .part-right {
+  clip-path: polygon(
+    /* (paste the “active .derecha” polygon from your snippet here) */
+  );
+}
+
+/* hit area so clicks are always caught */
+.hit-area {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: 3;
 }
