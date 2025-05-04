@@ -1,5 +1,3 @@
-/* radio.css */
-
 /* Shader canvas fallback */
 .dynamic-background {
   background: radial-gradient(circle at center, #111, #000);
@@ -19,11 +17,65 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   background: rgba(255,255,255,0.1);
 }
 
-/* Player container */
+/* Song info in top-right */
+.song-info {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  text-align: right;
+  z-index: 15;
+}
+.song-info h1,
+.song-info p {
+  margin: 0;
+  padding: 0;
+}
+.song-info h1 {
+  font-size: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+}
+.song-info p {
+  font-family: 'IBM Plex Mono', monospace;
+  color: #ccc;
+}
+
+/* Player container at bottom, full width */
 .player-container {
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  position: relative;
-  min-height: 200px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.5);
+  backdrop-blur: blur(10px);
+  padding: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Play/Pause Button - stylized */
+.btn-control {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.btn-control svg {
+  width: 2rem;
+  height: 2rem;
+  transition: transform .2s ease;
+}
+.btn-control:hover svg {
+  transform: scale(1.2);
+}
+.btn-control.playing svg {
+  /* Add rotation animation when playing */
+  animation: spin 1s linear infinite;
+}
+
+/* Reuse spinner keyframes for button */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Loading overlay */
@@ -43,23 +95,13 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 
 /* Audio controls footer */
 .audio-controls {
   display: flex;
   align-items: center;
   gap: .75rem;
-  margin-top: 1rem;
   font-family: 'IBM Plex Mono', monospace;
-}
-.btn-control {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
 }
 .time-display {
   min-width: 5rem;

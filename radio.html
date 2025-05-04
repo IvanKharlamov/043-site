@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,17 +17,21 @@
   <!-- Shader canvas -->
   <canvas id="bgCanvas" class="dynamic-background z-background fixed top-0 left-0 w-full h-full"></canvas>
 
-  <main class="relative z-base flex h-screen">
+  <main class="relative flex h-screen">
     <aside class="w-1/4 bg-black bg-opacity-60 backdrop-blur-sm p-6 overflow-y-auto">
       <h2 class="font-mono uppercase tracking-wider mb-4 text-lg">Playlist</h2>
       <ul id="song-list" class="space-y-2"></ul>
     </aside>
 
-    <section class="flex-1 flex flex-col justify-center items-center relative p-8">
-      <div class="player-container backdrop-blur-sm bg-black bg-opacity-50 border border-gray-800 rounded-2xl p-8 relative z-10 w-full max-w-xl text-center">
-        <h1 id="song-title" class="text-3xl font-spacegrotesk uppercase tracking-wide mb-2"></h1>
-        <p id="song-desc" class="text-gray-300 font-mono mb-6"></p>
+    <section class="flex-1 relative">
+      <!-- Song info -->
+      <div class="song-info">
+        <h1 id="song-title"></h1>
+        <p id="song-desc"></p>
+      </div>
 
+      <!-- Player container at bottom -->
+      <div class="player-container">
         <!-- Loading overlay -->
         <div id="loading" class="loading-overlay hidden">
           <div class="spinner"></div>
@@ -34,7 +39,16 @@
 
         <!-- Custom controls -->
         <div class="audio-controls">
-          <button id="play-btn" class="btn-control">▶️</button>
+          <button id="play-btn" class="btn-control">
+            <!-- Inline SVG icons for play/pause -->
+            <svg id="icon-play" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="16,0 64,32 16,64" fill="white"/>
+            </svg>
+            <svg id="icon-pause" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" class="hidden">
+              <rect x="0" y="0" width="20" height="64" fill="white"/>
+              <rect x="44" y="0" width="20" height="64" fill="white"/>
+            </svg>
+          </button>
           <div class="time-display">
             <span id="current-time">0:00</span> / <span id="duration">0:00</span>
           </div>
@@ -48,4 +62,3 @@
   <script src="radio.js"></script>
 </body>
 </html>
-
