@@ -15,6 +15,18 @@ window.RadioVisualizer = (function() {
       this.audioCtx = audioCtx;
       this.getTime  = getTime;
 
+	const dpr = window.devicePixelRatio || 1;
+	function resize() {
+	  const w = canvas.clientWidth  * dpr | 0;
+	  const h = canvas.clientHeight * dpr | 0;
+	  if (canvas.width !== w || canvas.height !== h) {
+		canvas.width  = w;
+		canvas.height = h;
+	  }
+	}
+	window.addEventListener('resize', resize);
+	resize();
+	
       // init WebGL
       const gl = canvas.getContext('webgl');
       if (!gl) throw new Error('WebGL not supported');
@@ -48,8 +60,8 @@ window.RadioVisualizer = (function() {
         gl.LUMINANCE, gl.UNSIGNED_BYTE,
         null
       );
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     }
