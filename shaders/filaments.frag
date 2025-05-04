@@ -7,8 +7,8 @@ uniform float     time;
 uniform sampler2D audioData;
 
 // simple 2×FFT lookup helpers
-float fftVal(float x)  { return texture2D(audioData, vec2(x, 0.25)).r; }
-float waveVal(float x) { return texture2D(audioData, vec2(x, 0.75)).r; }
+float fftVal(float x)  { return texture2D(audioData, vec2(x, 0.0)).r; }
+float waveVal(float x) { return texture2D(audioData, vec2(x, 1.0)).r; }
 
 mat2 rot(float a){
   float c = cos(a), s = sin(a);
