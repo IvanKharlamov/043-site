@@ -138,55 +138,65 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   margin-left: .5rem;/* optional spacing */
 }
 
-/* container */
 .button {
-  width: 2.5rem;      /* 40px */
-  height: 2.5rem;     /* 40px */
+  position: relative;
+  width: 2.5rem;   /* ~40px */
+  height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  background: none;
-  padding: 0;
 }
-
-/* “play” variant: circle + blue border */
 .button--play {
-  border: 3px solid white;
+  border: 3px solid #1e90ff;
   border-radius: 50%;
-  position: relative;
   overflow: hidden;
 }
 
-/* the two halves that form ▶ or ❚❚ */
+/* 1) absolutely center each shape */
 .button__shape {
   position: absolute;
-  width: 6px;        /* 25px in your original, scaled to 40px container */
-  height: 18px;      /* 75px → 40px */
-  background: white;
+  top: 50%;
+  left: 50%;
+  width: 6px;     /* scaled down from your 25px */
+  height: 18px;   /* scaled down from your 75px */
+  background: #1e90ff;
+  /* center + optional horizontal offset */
+  transform: translate(-50%, -50%) translateX(0);
   transition: 
     clip-path 300ms ease-in-out,
-    transform  300ms ease-in-out;
+    transform 300ms ease-in-out;
 }
 
-/* initial ▶ */
+/* 2) initial ▶ halves */
 .button__shape--one {
   /* left half of triangle */
-  clip-path: polygon(0 0, 100% 25%, 100% 75%, 0 100%);
-  transform: translateX(4px);
+  clip-path: polygon(
+    /* paste your original “parte izquierda” coords here */
+    0 0,100% 25%,100% 75%,0 100%
+  );
 }
 .button__shape--two {
   /* right half of triangle */
-  clip-path: polygon(0 25%, 100% 50%, 100% 50%, 0 75%);
-  transform: translateX(3.9px);
+  clip-path: polygon(
+    /* paste your original “parte derecha” coords here */
+    0 25%,100% 50%,100% 50%,0 75%
+  );
 }
 
-/* when active → ❚❚ */
+/* make sure they overlap perfectly as a ▶ */
+.button__shape--one,
+.button__shape--two {
+  transform: translate(-50%, -50%) translateX(0);
+}
+
+/* 3) on active → morph to two bars, and spread apart */
 .button--play.button--active .button__shape--one {
-  clip-path: polygon(0 15%, 50% 15%, 50% 85%, 0 85%);
-  transform: translateX(0);
+  /* left bar */
+  clip-path: polygon(0 15%,50% 15%,50% 85%,0 85%);
+  transform: translate(-50%, -50%) translateX(-5px);
 }
 .button--play.button--active .button__shape--two {
-  clip-path: polygon(50% 15%, 100% 15%, 100% 85%, 50% 85%);
-  transform: translateX(0);
+  /* right bar */
+  clip-path: polygon(50% 15%,100% 15%,100% 85%,50% 85%);
+  transform: translate(-50%, -50%) translateX(5px);
 }
