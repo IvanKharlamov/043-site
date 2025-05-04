@@ -1,22 +1,29 @@
-// shaders/simple.frag
+// shaders/simple_debug.frag
 
 #ifdef GL_ES
 precision mediump float;
 #endif
 
-uniform vec2  u_resolution;
-uniform float u_time;
-uniform float u_low;     // bass
-uniform float u_mid;     // mids
-uniform float u_high;    // highs
-uniform float u_volume;  // overall loudness
+uniform sampler2D iChannel0;   // your 2×FFT audio canvas
+uniform vec2      u_resolution;
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / u_resolution;
+    
+    // sample spectrum from row ≈0.25
+    float spec = texture2D(iChannel0, vec2(uv.x, 0.25)).r;
+    // sample waveform from row ≈0.75
+    float wave = texture2D(iChannel0, vec2(uv.x, 0.75)).r;
+    
+    // top half: show spectrum as red ramp
+    // bottom half: show waveform as green ramp
+    if (uv.y > 0.5) {
+        fragColor = vec4(spec, 0.0, 0.0, 1.0);
+    } else {
+        fragColor = vec4(0.0, wave, 0.0, 1.0);
+    }
+}
 
 void main() {
-    // Direct mapping of the three bands to R/G/B
-    vec3 bandColor = vec3(u_low, u_mid, u_high);
-
-    // Modulate brightness by volume
-    vec3 col = bandColor * u_volume;
-
-    gl_FragColor = vec4(col, 1.0);
+    mainImage(gl_FragColor, gl_FragCoord.xy);
 }
