@@ -19,10 +19,10 @@
       "shader": "shaders/circular.frag"
     },
     {
-      "title": "Track Two alt два",
-      "description": "Upbeat follow-up.",
-      "src": "audio/track2.mp3",
-      "shader": "shaders/vertical.frag"
+      "title": "Amok",
+      "description": "They court disaster.",
+      "src": "audio/amok.mp3",
+      "shader": "shaders/filaments.frag"
     },
     {
       "title": "Track Two alt 3",
