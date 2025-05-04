@@ -27,7 +27,7 @@
     {
       "title": "Track Two alt night",
       "description": "Upbeat follow-up.",
-      "src": "audio/track2.mp3",
+      "src": "audio/amok.mp3",
       "shader": "shaders/nightflower.frag"
     }
   ]
