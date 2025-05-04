@@ -266,5 +266,5 @@
   });
 
   // start first track
-  selectSong(0);
+  //selectSong(0);
 })();
