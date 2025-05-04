@@ -49,18 +49,6 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // ——— Audio‐texture setup (ShaderToy style) ———
-  const FFT_SIZE = bufLen; // usually 256
-  const audioTexCanvas = document.createElement('canvas');
-  audioTexCanvas.width  = FFT_SIZE;
-  audioTexCanvas.height = 2;
-  audioTexCanvas.style.display = 'none';
-  document.body.appendChild(audioTexCanvas);
-  const audioTexCtx     = audioTexCanvas.getContext('2d');
-  const audioImageData  = audioTexCtx.createImageData(FFT_SIZE, 2);
-  // bind this canvas as iChannel0
-  sandbox.setUniform('iChannel0', audioTexCanvas);
-
   // ——— Time formatting ———
   function fmt(t) {
     const m = Math.floor(t / 60),
@@ -118,11 +106,16 @@
     isFading = true;
     const now = audioCtx.currentTime;
 
+    // lock in current gain
     fadeGain.gain.cancelScheduledValues(now);
     fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
-    fadeGain.gain.exponentialRampToValueAtTime(0.01, now + FADE_DUR*0.8);
+
+    // 1) exponential ramp down to small value by 80% duration
+    fadeGain.gain.exponentialRampToValueAtTime(0.01, now + FADE_DUR * 0.8);
+    // 2) linear ramp from 0.01 to exact zero by end of duration
     fadeGain.gain.linearRampToValueAtTime(0, now + FADE_DUR);
 
+    // after fade finishes, actually pause
     fadeTimeout = setTimeout(() => {
       audio.pause();
       isFading = false;
@@ -130,19 +123,24 @@
   }
 
   function cancelFade() {
+    // clear any pending fade
     clearTimeout(fadeTimeout);
     const now = audioCtx.currentTime;
     fadeGain.gain.cancelScheduledValues(now);
+    // restore full gain immediately
     fadeGain.gain.setValueAtTime(1, now);
     isFading = false;
   }
 
+  // play/pause button click → fade logic
   playBtn.addEventListener('click', () => {
     if (audio.paused) {
+      // RESUME: restore gain, resume audio context, then play
       cancelFade();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       audio.play();
     } else {
+      // PAUSE: flip icon instantly, then fade out & pause
       playBtn.classList.remove('button--active');
       fadeOutAndPause();
     }
@@ -158,31 +156,9 @@
   function renderLoop() {
     requestAnimationFrame(renderLoop);
 
-    // fill audio texture rows
     analyser.getByteFrequencyData(freqData);
-    analyser.getByteTimeDomainData(timeData);
-    for (let x = 0; x < FFT_SIZE; x++) {
-      const v0 = freqData[x];
-      const v1 = timeData[x];
-      // row0 (FFT)
-      let idx = (0*FFT_SIZE + x)*4;
-      audioImageData.data[idx+0] = v0;
-      audioImageData.data[idx+1] = v0;
-      audioImageData.data[idx+2] = v0;
-      audioImageData.data[idx+3] = 255;
-      // row1 (waveform)
-      idx = (1*FFT_SIZE + x)*4;
-      audioImageData.data[idx+0] = v1;
-      audioImageData.data[idx+1] = v1;
-      audioImageData.data[idx+2] = v1;
-      audioImageData.data[idx+3] = 255;
-    }
-    audioTexCtx.putImageData(audioImageData, 0, 0);
-
-    // compute bands + rms
-    analyser.getByteFrequencyData(freqData);
-    const low  = avg(freqData, 0,            bufLen/3|0);
-    const mid  = avg(freqData, bufLen/3|0,   2*bufLen/3|0);
+    const low  = avg(freqData, 0,           bufLen/3|0);
+    const mid  = avg(freqData, bufLen/3|0,  2*bufLen/3|0);
     const high = avg(freqData, 2*bufLen/3|0, bufLen);
 
     analyser.getByteTimeDomainData(timeData);
@@ -193,7 +169,6 @@
     }
     const rms = Math.sqrt(sumSq / timeData.length);
 
-    // send uniforms
     const t = performance.now() * 0.001;
     sandbox.setUniform('u_time',   t);
     sandbox.setUniform('u_low',    low);
