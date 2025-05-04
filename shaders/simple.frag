@@ -40,9 +40,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
 
     vec3 base = vec3(0.35, 0.85713, 0.553123);
-    fragColor = vec4(base + c, 1.0);
+    fragColor = vec4(vec3(1) - (base + c), 1.0);
 }
 
 void main() {
     mainImage(gl_FragColor, gl_FragCoord.xy);
 }
+	
