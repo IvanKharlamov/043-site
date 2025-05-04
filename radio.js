@@ -34,12 +34,16 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // play/pause toggle with morphing SVG icons
+	const playBtn = document.getElementById('play-btn');
+
 	playBtn.addEventListener('click', () => {
-	  audio.paused ? audio.play() : audio.pause();
+	  if (audio.paused) audio.play();
+	  else               audio.pause();
 	});
-	audio.addEventListener('play',  () => playBtn.classList.add('active'));
-	audio.addEventListener('pause', () => playBtn.classList.remove('active'));
+
+	// keep the button-state in sync with actual playback
+	audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
+	audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
 
 
   // format time as M:SS
