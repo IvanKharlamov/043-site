@@ -147,7 +147,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   justify-content: center;
 }
 .button--play {
-  border: 3px solid #1e90ff;
+  border: 3px solid white;
   border-radius: 50%;
   overflow: hidden;
 }
@@ -159,7 +159,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   left: 50%;
   width: 6px;     /* scaled down from your 25px */
   height: 18px;   /* scaled down from your 75px */
-  background: #1e90ff;
+  background: white;
   /* center + optional horizontal offset */
   transform: translate(-50%, -50%) translateX(0);
   transition: 
