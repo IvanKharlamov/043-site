@@ -25,10 +25,10 @@
       "shader": "shaders/filaments.frag"
     },
     {
-      "title": "Track Two alt 3",
+      "title": "Track Two alt night",
       "description": "Upbeat follow-up.",
       "src": "audio/track2.mp3",
-      "shader": "shaders/cut.frag"
+      "shader": "shaders/nightflower.frag"
     }
   ]
 }
