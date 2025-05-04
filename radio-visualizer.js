@@ -1,12 +1,19 @@
 // radio-visualizer.js
 
-// Provides a simple API to load a shader file and continuously render
+// Exposes window.RadioVisualizer.create(canvas, analyser, audioCtx, getTime)
 window.RadioVisualizer = (function() {
   class RadioVisualizer {
-    constructor(canvas, analyser, audioCtx) {
+    /**
+     * @param {HTMLCanvasElement} canvas
+     * @param {AnalyserNode}      analyser
+     * @param {AudioContext}      audioCtx
+     * @param {Function}          getTime   – returns seconds (e.g. () => audio.currentTime)
+     */
+    constructor(canvas, analyser, audioCtx, getTime) {
       this.canvas   = canvas;
       this.analyser = analyser;
       this.audioCtx = audioCtx;
+      this.getTime  = getTime;
 
       // init WebGL
       const gl = canvas.getContext('webgl');
@@ -22,9 +29,9 @@ window.RadioVisualizer = (function() {
       `;
 
       // configure analyser & buffers
-      analyser.fftSize = 512;
-      this.FFT_SIZE    = analyser.frequencyBinCount; // 256
-      this.audioDataBuf = new Uint8Array(this.FFT_SIZE * 2);
+      analyser.fftSize    = 512;
+      this.FFT_SIZE       = analyser.frequencyBinCount; // 256
+      this.audioDataBuf   = new Uint8Array(this.FFT_SIZE * 2);
 
       this._createAudioTexture();
       this._createQuadBuffer();
@@ -65,16 +72,14 @@ window.RadioVisualizer = (function() {
     }
 
     /**
-     * Fetch and compile a new fragment shader.
-     * @param {string} shaderUrl – URL of your `.frag` (or `.glsl`) file
+     * Fetches and compiles a new fragment shader.
+     * @param {string} shaderUrl  URL to a .frag (or .glsl) file
      * @returns {Promise<void>}
      */
     async loadShader(shaderUrl) {
       const src = await fetch(shaderUrl).then(r => r.text());
-      // compile [vertex, fragment]
       this.programInfo = twgl.createProgramInfo(this.gl, [
         this.vsSource,
-        // ensure the fetched code defines `precision` + `uniform sampler2D audioData;`
         src
       ]);
     }
@@ -84,7 +89,6 @@ window.RadioVisualizer = (function() {
         this._renderFrame();
         requestAnimationFrame(draw);
       };
-      // resume if suspended
       if (this.audioCtx.state === 'suspended') {
         this.audioCtx.resume().then(() => requestAnimationFrame(draw));
       } else {
@@ -94,13 +98,13 @@ window.RadioVisualizer = (function() {
 
     _renderFrame() {
       const gl = this.gl;
-      if (!this.programInfo) return; // wait until loadShader() finishes
+      if (!this.programInfo) return; // wait until loadShader() has been called
 
-      // pull FFT + waveform into two consecutive rows
+      // 1) read analyser data
       this.analyser.getByteFrequencyData(this.audioDataBuf.subarray(0, this.FFT_SIZE));
       this.analyser.getByteTimeDomainData(this.audioDataBuf.subarray(this.FFT_SIZE));
 
-      // upload into 2×FFT texture
+      // 2) upload to texture
       gl.bindTexture(gl.TEXTURE_2D, this.audioTex);
       gl.texSubImage2D(
         gl.TEXTURE_2D, 0,
@@ -110,12 +114,14 @@ window.RadioVisualizer = (function() {
         this.audioDataBuf
       );
 
-      // draw full‐screen quad
+      // 3) render quad
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
       gl.useProgram(this.programInfo.program);
       twgl.setBuffersAndAttributes(gl, this.programInfo, this.bufferInfo);
       twgl.setUniforms(this.programInfo, {
         resolution: [gl.canvas.width, gl.canvas.height],
+        // pull time from the provided callback
+        time:       this.getTime(),
         audioData:  this.audioTex,
       });
       twgl.drawBufferInfo(gl, this.bufferInfo);
@@ -123,13 +129,8 @@ window.RadioVisualizer = (function() {
   }
 
   return {
-    /**
-     * @param {HTMLCanvasElement} canvas
-     * @param {AnalyserNode}      analyser
-     * @param {AudioContext}      audioCtx
-     */
-    create(canvas, analyser, audioCtx) {
-      return new RadioVisualizer(canvas, analyser, audioCtx);
+    create(canvas, analyser, audioCtx, getTime) {
+      return new RadioVisualizer(canvas, analyser, audioCtx, getTime);
     }
   };
 })();
