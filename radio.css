@@ -65,8 +65,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
 .player-container {
   position: absolute;
   bottom: 4rem;           /* lift it up a bit */
-  left: 25%;              /* to the right of the w-1/4 sidebar */
-  width: 75%;             /* fill the rest */
+  width: 100%;      
   max-width: none;        /* override any previous max-width */
   z-index: 20;            /* above the shader canvas */
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
@@ -95,6 +94,10 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   animation: spin 1s linear infinite;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Audio controls footer */
 .audio-controls {
   display: flex;
@@ -121,4 +124,16 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
   background: white;
   border-radius: 50%;
   cursor: pointer;
+}
+
+/* give the seek slider most of the space */
+#seek-slider {
+  flex: 4;           /* grow 4× as much as a 1-unit item */
+  min-width: 0;      /* allow it to shrink if needed */
+}
+
+/* make the volume slider small/fixed */
+#volume-slider {
+  flex: 0 0 80px;    /* don’t grow, don’t shrink, stay 80px wide */
+  margin-left: .5rem;/* optional spacing */
 }
