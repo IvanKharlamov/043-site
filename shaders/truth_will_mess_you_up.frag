@@ -29,28 +29,6 @@ vec3 hsl2rgb(vec3 c) {
     return c.z + c.y*(rgb - 0.5)*(1.0 - abs(2.0*c.z - 1.0));
 }
 
-void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-    vec2 res = u_resolution;
-    float ps = 1.0 / min(res.x, res.y);
-
-    // base UV (centered, scaled)
-    vec2 uv0 = (2.0*fragCoord - res)*0.6/min(res.x,res.y);
-    uv0.x = abs(uv0.x);
-    uv0.y *= -1.0;
-
-    // volume “pulse” shrinking
-    float vp = smoothstep(0.3,1.1,u_volume)*0.7;
-    vec2 uvPulse = uv0 * (1.0 - vp);
-
-    // chromatic aberration offset
-    float ca = u_high * 0.02;
-    vec2 dir = normalize(uv0 + 1e-6);
-
-    // prepare three UVs
-    vec2 uvR = uvPulse * (1.0 + ca);
-    vec2 uvG = uvPulse;
-    vec2 uvB = uvPulse * (1.0 - ca);
-
     // one function to do the original ring logic per‐UV
     float ringLogic(vec2 uv) {
         // polar coords
@@ -84,6 +62,29 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
         return outCol;
     }
+	
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 res = u_resolution;
+    float ps = 1.0 / min(res.x, res.y);
+
+    // base UV (centered, scaled)
+    vec2 uv0 = (2.0*fragCoord - res)*0.6/min(res.x,res.y);
+    uv0.x = abs(uv0.x);
+    uv0.y *= -1.0;
+
+    // volume “pulse” shrinking
+    float vp = smoothstep(0.3,1.1,u_volume)*0.7;
+    vec2 uvPulse = uv0 * (1.0 - vp);
+
+    // chromatic aberration offset
+    float ca = u_high * 0.02;
+    vec2 dir = normalize(uv0 + 1e-6);
+
+    // prepare three UVs
+    vec2 uvR = uvPulse * (1.0 + ca);
+    vec2 uvG = uvPulse;
+    vec2 uvB = uvPulse * (1.0 - ca);
+
 
     // compute each channel
     float cR = ringLogic(uvR);
