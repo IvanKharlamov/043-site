@@ -40,7 +40,6 @@
   // ——— Shader canvas setup ———
   const canvas  = document.getElementById('bgCanvas');
   const audioTexCanvas = document.createElement('canvas');
-  const FFT_SIZE = bufLen; // usually 256
   audioTexCanvas.width  = FFT_SIZE;
   audioTexCanvas.height = 2;
   audioTexCanvas.style.display = 'none';
@@ -58,6 +57,7 @@
   resizeCanvas();
 
   // ——— Audio‐texture setup (ShaderToy style) ———
+  const FFT_SIZE = bufLen; // usually 256
   const audioTexCtx     = audioTexCanvas.getContext('2d');
   const audioImageData  = audioTexCtx.createImageData(FFT_SIZE, 2);
   // bind this canvas as iChannel0
