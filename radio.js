@@ -34,7 +34,6 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-	const playBtn = document.getElementById('play-btn');
 
 	playBtn.addEventListener('click', () => {
 	  if (audio.paused) audio.play();
