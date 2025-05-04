@@ -174,7 +174,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
     /* paste your original “parte izquierda” coords here */
     0 0,100% 25%,100% 75%,0 100%
   );
-  transform: translate(-50%, -50%) translateX(2.5px);
+  transform: translate(-50%, -50%) translateX(-0.9px);
 }
 .button__shape--two {
   /* right half of triangle */
@@ -182,7 +182,7 @@ aside { border-right: 1px solid rgba(255,255,255,0.1); }
     /* paste your original “parte derecha” coords here */
     0 25%,100% 50%,100% 50%,0 75%
   );
-  transform: translate(-50%, -50%) translateX(-2.5px);
+  transform: translate(-50%, -50%) translateX(4.8px);
 }
 
 
