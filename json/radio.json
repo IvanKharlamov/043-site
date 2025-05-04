@@ -25,9 +25,9 @@
       "shader": "shaders/filaments.frag"
     },
     {
-      "title": "Track Two alt night",
-      "description": "Upbeat follow-up.",
-      "src": "audio/amok.mp3",
+      "title": "Ful stop",
+      "description": "A foul-tasting medicine.",
+      "src": "audio/fulstop.mp3",
       "shader": "shaders/nightflower.frag"
     }
   ]
