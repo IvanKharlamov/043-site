@@ -17,11 +17,11 @@
 
   const audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
   const srcNode   = audioCtx.createMediaElementSource(audio);
-  const fadeGain  = audioCtx.createGain();    // for fade-out
+  const fadeGain  = audioCtx.createGain();     // for fade-out
   const analyser  = audioCtx.createAnalyser(); // for shader uniforms
-  const volGain   = audioCtx.createGain();    // for user volume slider
+  const volGain   = audioCtx.createGain();     // for user volume slider
 
-  // chain: audio → fadeGain → analyser → volGain → output
+  // chain: audio → fadeGain → analyser → volGain → destination
   srcNode.connect(fadeGain);
   fadeGain.connect(analyser);
   analyser.connect(volGain);
@@ -51,8 +51,8 @@
 
   // ——— Time formatting ———
   function fmt(t) {
-    const m = Math.floor(t/60),
-          s = Math.floor(t%60).toString().padStart(2,'0');
+    const m = Math.floor(t / 60),
+          s = Math.floor(t % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
 
@@ -69,11 +69,11 @@
     audio.currentTime = parseFloat(seekSlider.value);
   });
 
-  // keep play/pause icon in sync
+  // keep play/pause icon in sync for programmatic pause/play
   audio.addEventListener('play',  () => playBtn.classList.add('button--active'));
   audio.addEventListener('pause', () => playBtn.classList.remove('button--active'));
 
-  // ——— Volume slider → volGain ———
+  // ——— Volume slider → volGain (user-controlled) ———
   volumeSlider.addEventListener('input', () => {
     const v = parseFloat(volumeSlider.value);
     volGain.gain.setValueAtTime(v, audioCtx.currentTime);
@@ -97,7 +97,7 @@
   document.addEventListener('mousemove', resetInactivityTimer);
   audio.addEventListener('play', resetInactivityTimer);
 
-  // ——— Fade-out + pause logic (piecewise ramp to true zero) ———
+  // ——— Fade-out + pause logic (logarithmic then zero) ———
   let fadeTimeout, isFading = false;
   const FADE_DUR = 0.5; // seconds
 
@@ -110,44 +110,37 @@
     fadeGain.gain.cancelScheduledValues(now);
     fadeGain.gain.setValueAtTime(fadeGain.gain.value, now);
 
-    // 1) exponential ramp down quickly to 0.01 by 80% of FADE_DUR
-    fadeGain.gain.exponentialRampToValueAtTime(
-      0.01,
-      now + FADE_DUR * 0.8
-    );
+    // 1) exponential ramp down to small value by 80% duration
+    fadeGain.gain.exponentialRampToValueAtTime(0.01, now + FADE_DUR * 0.8);
+    // 2) linear ramp from 0.01 to exact zero by end of duration
+    fadeGain.gain.linearRampToValueAtTime(0, now + FADE_DUR);
 
-    // 2) linear ramp from 0.01 down to exact zero by end of FADE_DUR
-    fadeGain.gain.linearRampToValueAtTime(
-      0,
-      now + FADE_DUR
-    );
-
-    // 3) once fully faded, pause audio
+    // after fade finishes, actually pause
     fadeTimeout = setTimeout(() => {
       audio.pause();
       isFading = false;
-      // leave gain at 0 until next resume
     }, FADE_DUR * 1000);
   }
 
   function cancelFade() {
-    if (!isFading) return;
+    // clear any pending fade
     clearTimeout(fadeTimeout);
     const now = audioCtx.currentTime;
     fadeGain.gain.cancelScheduledValues(now);
+    // restore full gain immediately
     fadeGain.gain.setValueAtTime(1, now);
     isFading = false;
   }
 
-  // play/pause button handler
+  // play/pause button click → fade logic
   playBtn.addEventListener('click', () => {
     if (audio.paused) {
-      // RESUME: cancel any fade, restore gain, resume context, then play
+      // RESUME: restore gain, resume audio context, then play
       cancelFade();
       if (audioCtx.state === 'suspended') audioCtx.resume();
       audio.play();
     } else {
-      // PAUSE: flip icon instantly, then fade out and pause
+      // PAUSE: flip icon instantly, then fade out & pause
       playBtn.classList.remove('button--active');
       fadeOutAndPause();
     }
@@ -155,9 +148,9 @@
 
   // ——— Shader uniforms render loop ———
   function avg(arr, start, end) {
-    let s = 0;
-    for (let i = start; i < end; i++) s += arr[i];
-    return s / ((end - start) || 1) / 255;
+    let sum = 0;
+    for (let i = start; i < end; i++) sum += arr[i];
+    return sum / ((end - start) || 1) / 255;
   }
 
   function renderLoop() {
@@ -172,7 +165,7 @@
     let sumSq = 0;
     for (let i = 0; i < timeData.length; i++) {
       const x = (timeData[i] / 128) - 1;
-      sumSq += x*x;
+      sumSq += x * x;
     }
     const rms = Math.sqrt(sumSq / timeData.length);
 
@@ -191,6 +184,7 @@
     const thisLoad  = ++loadId;
     const startTime = Date.now();
 
+    // highlight playlist
     listEl.querySelectorAll('li').forEach((li,i) => {
       li.classList.toggle('active', i === idx);
     });
@@ -200,10 +194,12 @@
 
     loadingEl.classList.remove('hidden');
 
+    // load shader
     const shaderPromise = fetch(shader)
       .then(r => r.text())
-      .then(src => sandbox.load(src));
+      .then(srcCode => sandbox.load(srcCode));
 
+    // prepare audio
     audio.pause();
     audio.src = src;
     audio.load();
@@ -216,9 +212,11 @@
       setTimeout(onCan, 3000);
     });
 
+    // wait both
     await Promise.all([shaderPromise, audioPromise]);
     if (thisLoad !== loadId) return;
 
+    // enforce 1s minimum loader
     const elapsed = Date.now() - startTime;
     if (elapsed < 1000) {
       await new Promise(r => setTimeout(r, 1000 - elapsed));
