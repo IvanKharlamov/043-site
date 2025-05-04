@@ -7,8 +7,8 @@
       "shader": "shaders/circular.frag"
     },
     {
-      "title": "Track Two",
-      "description": "Upbeat follow-up.",
+      "title": "Outskirts",
+      "description": "What fate a slugcat?",
       "src": "audio/track2.mp3",
       "shader": "shaders/octagonal.frag"
     },
