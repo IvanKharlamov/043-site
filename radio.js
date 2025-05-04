@@ -39,14 +39,7 @@
 
   // ——— Shader canvas setup ———
   const canvas  = document.getElementById('bgCanvas');
-  const audioTexCanvas = document.createElement('canvas');
-  audioTexCanvas.width  = FFT_SIZE;
-  audioTexCanvas.height = 2;
-  audioTexCanvas.style.display = 'none';
-  document.body.appendChild(audioTexCanvas);
-  const sandbox = new GlslCanvas(canvas, {
-   channels: [ audioTexCanvas ]
- });
+  const sandbox = new GlslCanvas(canvas);
   function resizeCanvas() {
     const w = window.innerWidth, h = window.innerHeight;
     canvas.width  = w;
@@ -58,10 +51,15 @@
 
   // ——— Audio‐texture setup (ShaderToy style) ———
   const FFT_SIZE = bufLen; // usually 256
+  const audioTexCanvas = document.createElement('canvas');
+  audioTexCanvas.width  = FFT_SIZE;
+  audioTexCanvas.height = 2;
+  audioTexCanvas.style.display = 'none';
+  document.body.appendChild(audioTexCanvas);
   const audioTexCtx     = audioTexCanvas.getContext('2d');
   const audioImageData  = audioTexCtx.createImageData(FFT_SIZE, 2);
   // bind this canvas as iChannel0
-  //sandbox.setUniform('iChannel0', audioTexCanvas);
+  sandbox.setUniform('iChannel0', audioTexCanvas);
 
   // ——— Time formatting ———
   function fmt(t) {
