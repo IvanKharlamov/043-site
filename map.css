@@ -1,76 +1,82 @@
-
+/* pull in your radio-page shader fallback */
 .dynamic-background {
   background: radial-gradient(circle at center, #111, #000);
-  width: 100%;
 }
 
-/* Sidebar border */
-aside {
-  border-right: 1px solid rgba(255,255,255,0.1);
+/* keep your main map fade-in */
+.map-container {
+  opacity: 0;
+  animation: fadeInMap 0.8s ease-out forwards;
+}
+@keyframes fadeInMap {
+  to { opacity: 1; }
 }
 
-#map-wrapper { cursor: grab; }
-#map-wrapper.grabbing { cursor: grabbing; }
+/* SVG styling & pan/zoom cursor */
+.map-svg {
+  display: block;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  transition: transform 0.3s ease;
+}
+#map-wrapper {
+  position: relative;
+}
 
-/* Loading overlay */
-.loading-overlay {
+/* Pin marker */
+.marker {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  width: 20px; height: 20px;
+  border: 3px solid cyan;
+  border-radius: 50% 50% 50% 0;
+  background: transparent;
+  transition: transform 0.2s ease, background 0.2s ease;
+  cursor: pointer;
 }
-.spinner {
-  width: 48px; height: 48px;
-  border: 5px solid rgba(255,255,255,0.3);
-  border-top-color: white;
+.marker::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  background: cyan;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Pin marker styling */
-.pin1 {
-  stroke: #fff;
-  stroke-width: 4;
-  fill: none;
-  transition: fill 0.2s ease, stroke 0.2s ease;
-  transform: rotate(-45deg);
-  transform-origin: center;
+.marker:hover {
+  transform: translate(-50%, -100%) rotate(-45deg) scale(1.2);
+  background: rgba(0, 255, 255, 0.2);
 }
-.pin1-inner {
-  fill: #fff;
-  transition: fill 0.2s ease;
-}
-.marker-group:hover .pin1,
-.marker-group.selected .pin1 {
-  fill: rgba(255,240,150,0.8);
-  stroke: rgba(255,240,150,0.8);
-}
-.marker-group:hover .pin1-inner,
-.marker-group.selected .pin1-inner {
-  fill: #000;
+.marker.selected {
+  background: rgba(255, 240, 150, 0.3);
+  border-color: yellow;
 }
 
-#year-filter button {
-  @apply px-3 py-1 text-sm uppercase rounded font-space border border-gray-600 transition-colors;
+/* Info-panel arrows */
+.nav-arrow {
+  font-size: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  color: #ccc;
+  transition: color 0.2s;
 }
-#year-filter button.selected {
-  @apply bg-yellow-600 text-black border-yellow-600;
-}
-
-.fade-transition {
-  transition: all 0.6s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* Info panel nav arrows */
-#info-panel .nav-arrow {
-  @apply cursor-pointer text-xl select-none;
+.nav-arrow:hover {
+  color: #fff;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  #map-wrapper svg { height: 50vh; }
+/* Some radio-page sidebar touches */
+aside {
+  border-left: 1px solid rgba(255,255,255,0.1);
 }
+.song-info h2,
+.song-info p {
+  margin: 0; padding: 0;
+}
+.song-info h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+}
+.song-info p {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* slide-in/out for hidden state */
+.hidden { display: none; }

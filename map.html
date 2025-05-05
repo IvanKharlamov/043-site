@@ -3,37 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>043 Map</title>
+  <title>043 Map</title> 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="common.css" />
-  <link rel="stylesheet" href="map.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="map.css">
   <script src="header.js"></script>
 </head>
-<body class="bg-black text-white overflow-x-hidden">
-  <div class="dynamic-background z-background"></div>
-  <main class="relative z-base container mx-auto px-4 py-8">
-    <header class="text-center mb-6">
-      <h1 class="text-5xl font-bold header-text uppercase tracking-wider text-yellow-100">043 MAP</h1>
-      <div class="header-line mx-auto mt-4"></div>
-    </header>
+<body class="bg-black text-white overflow-hidden">
 
-    <nav id="year-filter" class="flex-center space-x-4 mb-8 fade-transition" aria-label="Filter events by year"></nav>
+  <!-- Shader fallback -->
+  <div class="dynamic-background fixed inset-0 z-background"></div>
 
-    <div class="flex flex-col md:flex-row gap-6">
-      <div id="map-wrapper" class="flex-1 relative overflow-hidden border border-gray-700 rounded-lg">
-        <div class="loading-overlay">
-          <div class="spinner"></div>
-        </div>
-        <svg id="map" class="map-svg w-full h-[60vh] md:h-[80vh]"></svg>
+  <main class="relative z-base flex h-screen">
+    <!-- Left: controls + map -->
+    <div class="flex flex-col flex-1">
+      <header class="text-center py-6">
+        <h1 class="text-4xl font-mono uppercase tracking-wider text-yellow-100">043 MAP</h1>
+        <div class="header-line mx-auto mt-2"></div>
+      </header>
+
+      <!-- Year filter -->
+      <nav id="year-filter" class="flex-center space-x-4 px-4 mb-4 fade-transition" aria-label="Filter events by year"></nav>
+
+      <!-- Map area -->
+      <div id="map-wrapper" class="flex-1 border-l border-t border-b border-gray-700 overflow-hidden cursor-grab relative">
+        <div id="map" class="map-svg w-full h-full"></div>
       </div>
-      <aside id="info-panel" class="hidden flex-col w-full md:w-1/4 p-4 bg-gray-900 bg-opacity-50 backdrop-filter backdrop-blur-lg">
-        <!-- populated dynamically -->
-      </aside>
     </div>
+
+    <!-- Right: info panel -->
+    <aside id="info-panel" class="w-1/4 bg-black bg-opacity-60 backdrop-blur-sm p-6 overflow-y-auto hidden">
+      <div class="song-info mb-4">
+        <h2 id="place-name" class="header-text text-lg"></h2>
+        <p id="place-year" class="font-mono text-sm text-gray-400"></p>
+      </div>
+      <div id="event-details" class="space-y-4"></div>
+      <div class="flex justify-between mt-6">
+        <button id="prev" class="nav-arrow hidden">&lt;</button>
+        <button id="next" class="nav-arrow hidden">&gt;</button>
+      </div>
+    </aside>
   </main>
 
-  <script type="module" src="map.js" defer></script>
+  <script type="module" src="map.js"></script>
 </body>
 </html>
