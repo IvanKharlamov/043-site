@@ -1,52 +1,37 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>043 Content Page</title>
+  <title>043 Map</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap"
     rel="stylesheet"
   />
   <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="index-dynamic-background.css">
   <link rel="stylesheet" href="map.css">
   <script src="header.js"></script>
 </head>
 <body class="bg-black text-white">
-  <div class="dynamic-background z-background"></div>
+  <div class="dynamic-background fixed inset-0 z-0"></div>
 
-  <main
-    class="relative z-base container mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col"
-  >
-    <header class="mb-20 text-center">
-      <h1 class="text-5xl font-bold font-mono uppercase tracking-wider text-yellow-100">043 MAP</h1>
-      <div class="header-line mx-auto mt-4"></div>
+  <main class="relative z-10 container mx-auto p-4 flex flex-col md:flex-row gap-6">
+    <header class="w-full text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold font-mono uppercase tracking-wide text-yellow-100">043 MAP</h1>
+      <div class="header-line mx-auto mt-2 w-24"></div>
     </header>
 
-    <!-- Year filter -->
-    <nav id="year-filter" class="flex-center space-x-4 mb-8 fade-transition" aria-label="Filter events by year" >
-    </nav>
-
-    <!-- Map + Info Panel -->
-    <div class="map-container mb-20 flex gap-8">
-      <!-- left: map -->
-      <div
-        id="map-wrapper"
-        class="flex-1 overflow-hidden border border-gray-700"
-      >
-        <div id="map" class="map-svg w-full h-full"></div>
+    <section class="flex flex-col md:flex-row flex-1 space-y-4 md:space-y-0 md:space-x-4">
+      <div id="map-wrapper" class="relative flex-1 overflow-hidden border border-gray-700 rounded-lg">
+        <svg id="map" class="w-full h-[60vh] md:h-auto"></svg>
       </div>
-
-      <!-- right: info panel -->
-      <aside
-        id="info-panel"
-        class="hidden flex-col w-1/6 p-4 bg-gray-900 bg-opacity-50 backdrop-filter backdrop-blur-lg"
-      >
-        <!-- content injected by JS -->
+      <aside id="info-panel" class="hidden md:block w-full md:w-1/4 p-4 bg-gray-900/60 backdrop-blur-lg rounded-lg">
+        <!-- dynamic info -->
       </aside>
-    </div>
+    </section>
+
+    <nav id="year-filter" class="flex flex-wrap justify-center md:justify-start gap-2 mt-4"></nav>
   </main>
 
   <script src="map.js" defer></script>
