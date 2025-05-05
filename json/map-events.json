@@ -1,0 +1,38 @@
+[
+  {
+    "placeId": "paris",
+    "year": 2025,
+    "title": "Paris Expo",
+    "description": "International exhibition showcasing cutting-edge design, architecture, and innovation."
+  },
+  {
+    "placeId": "berlin",
+    "year": 2025,
+    "title": "Berlin Summit",
+    "description": "Annual gathering of European leaders to discuss policy and collaboration."
+  },
+  {
+    "placeId": "paris",
+    "year": 2024,
+    "title": "Paris Fashion Week",
+    "description": "One of the world's premier fashion events featuring top designers."
+  },
+  {
+    "placeId": "rome",
+    "year": 2024,
+    "title": "Rome Conference",
+    "description": "Historic preservation conference held near the Colosseum."
+  },
+  {
+    "placeId": "moscow",
+    "year": 2023,
+    "title": "Moscow Tech",
+    "description": "Annual technology fair bringing together startups and investors."
+  },
+  {
+    "placeId": "moscow",
+    "year": 2023,
+    "title": "Moscow Forum",
+    "description": "International forum on economic development and cultural exchange."
+  }
+]

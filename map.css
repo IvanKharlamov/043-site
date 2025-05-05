@@ -19,3 +19,41 @@
   transform: scale(1.03);
   box-shadow: 0 15px 40px rgba(0,0,0,0.75);
 }
+
+#map svg path {
+  fill: var(--map-fill, #333);
+  stroke: var(--map-stroke, #fff);
+  stroke-width: 0.25;
+  transition: fill 0.3s, stroke 0.3s;
+}
+
+#map-wrapper svg {
+  transform-origin: center center;
+  transition: transform 0.2s ease-out;
+  cursor: grab;
+}
+
+.marker {
+  fill: cyan;
+  stroke: white;
+  stroke-width: 0.5;
+  r: 5;
+  cursor: pointer;
+  transition: fill 0.2s;
+}
+.marker:hover {
+  fill: yellow;
+}
+
+.year-btn {
+  @apply header-text fade-transition px-3 py-1 rounded;
+  background: rgba(50,50,50,0.6);
+}
+.year-btn.selected {
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+
+#info-panel .nav-arrow {
+  @apply cursor-pointer text-xl px-2 select-none;
+}
