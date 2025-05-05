@@ -6,28 +6,33 @@
   <title>043 Map</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="map.css">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="map.css" />
   <script src="header.js"></script>
 </head>
-<body class="bg-black text-white font-mono">
-  <header class="p-4 text-center">
-    <h1 class="text-3xl md:text-5xl font-bold uppercase font-space tracking-wide text-yellow-300">043 MAP</h1>
-    <nav id="year-filter" class="mt-4 flex flex-wrap justify-center gap-2"></nav>
-  </header>
+<body class="bg-black text-white overflow-x-hidden">
+  <div class="dynamic-background z-background"></div>
+  <main class="relative z-base container mx-auto px-4 py-8">
+    <header class="text-center mb-6">
+      <h1 class="text-5xl font-bold header-text uppercase tracking-wider text-yellow-100">043 MAP</h1>
+      <div class="header-line mx-auto mt-4"></div>
+    </header>
 
-  <div id="map-container" class="relative w-full h-[70vh] md:h-[80vh] border-t border-b border-gray-700">
-    <svg id="map" class="w-full h-full"></svg>
-    <aside id="info-panel" class="absolute bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-lg p-4 transform translate-y-full transition-transform duration-300">
-      <button id="close-panel" class="absolute top-2 right-4 text-white text-xl">✕</button>
-      <div id="info-content"></div>
-    </aside>
-  </div>
+    <nav id="year-filter" class="flex-center space-x-4 mb-8 fade-transition" aria-label="Filter events by year"></nav>
 
-  <footer class="p-4 text-center text-gray-400 text-sm">
-    &copy; 043 Archive
-  </footer>
+    <div class="flex flex-col md:flex-row gap-6">
+      <div id="map-wrapper" class="flex-1 relative overflow-hidden border border-gray-700 rounded-lg">
+        <div class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+        <svg id="map" class="map-svg w-full h-[60vh] md:h-[80vh]"></svg>
+      </div>
+      <aside id="info-panel" class="hidden flex-col w-full md:w-1/4 p-4 bg-gray-900 bg-opacity-50 backdrop-filter backdrop-blur-lg">
+        <!-- populated dynamically -->
+      </aside>
+    </div>
+  </main>
 
   <script type="module" src="map.js" defer></script>
 </body>

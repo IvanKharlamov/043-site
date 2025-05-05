@@ -1,18 +1,76 @@
 
-#map-container { cursor: grab; }
-#map-container.grabbing { cursor: grabbing; }
-.marker { fill: #00ffffaa; stroke: #fff; stroke-width: 0.5; transition: r 0.2s ease, fill 0.2s ease; }
-.marker:hover { r: 8; fill: #fff000cc; }
-#year-filter button { @apply px-3 py-1 text-sm uppercase rounded font-space border border-gray-600 hover:border-yellow-500; }
-#year-filter button.selected { @apply bg-yellow-500 text-black border-yellow-500; }
-#info-panel.open { transform: translateY(0); }
-#info-panel h2 { @apply text-lg font-semibold font-space mb-2; }
-#info-panel p, #info-panel h3 { @apply mb-2; }
+.dynamic-background {
+  background: radial-gradient(circle at center, #111, #000);
+  width: 100%;
+}
 
-/* Accessibility focus */
-button:focus { outline: 2px solid #fff; outline-offset: 2px; }
+/* Sidebar border */
+aside {
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
 
-/* Responsive: larger map on mobile */
-@media (max-width: 640px) {
-  #map-container { height: 60vh; }
+#map-wrapper { cursor: grab; }
+#map-wrapper.grabbing { cursor: grabbing; }
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.spinner {
+  width: 48px; height: 48px;
+  border: 5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Pin marker styling */
+.pin1 {
+  stroke: #fff;
+  stroke-width: 4;
+  fill: none;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+.pin1-inner {
+  fill: #fff;
+  transition: fill 0.2s ease;
+}
+.marker-group:hover .pin1,
+.marker-group.selected .pin1 {
+  fill: rgba(255,240,150,0.8);
+  stroke: rgba(255,240,150,0.8);
+}
+.marker-group:hover .pin1-inner,
+.marker-group.selected .pin1-inner {
+  fill: #000;
+}
+
+#year-filter button {
+  @apply px-3 py-1 text-sm uppercase rounded font-space border border-gray-600 transition-colors;
+}
+#year-filter button.selected {
+  @apply bg-yellow-600 text-black border-yellow-600;
+}
+
+.fade-transition {
+  transition: all 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Info panel nav arrows */
+#info-panel .nav-arrow {
+  @apply cursor-pointer text-xl select-none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #map-wrapper svg { height: 50vh; }
 }
