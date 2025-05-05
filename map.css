@@ -10,14 +10,8 @@
 
 .map-svg {
   display: block;
-  border-radius: 0.5rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.map-svg:hover {
-  transform: scale(1.03);
-  box-shadow: 0 15px 40px rgba(0,0,0,0.75);
 }
 
 #map svg path {
