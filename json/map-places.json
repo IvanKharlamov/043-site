@@ -3,24 +3,24 @@
     "id": "paris",
     "name": "Paris",
     "x": 260,
-    "y": 200
+    "y": 100
   },
   {
     "id": "berlin",
     "name": "Berlin",
     "x": 280,
-    "y": 180
+    "y": 70
   },
   {
     "id": "rome",
     "name": "Rome",
     "x": 270,
-    "y": 230
+    "y": 60
   },
   {
     "id": "moscow",
     "name": "Moscow",
-    "x": 320,
-    "y": 190
+    "x": 220,
+    "y": 90
   }
 ]
