@@ -1,28 +1,53 @@
-/* pull in your radio-page shader fallback */
+/* Shader canvas fallback */
 .dynamic-background {
   background: radial-gradient(circle at center, #111, #000);
+  width: 100%;
+  height: 100%;
 }
 
-/* keep your main map fade-in */
-.map-container {
-  opacity: 0;
-  animation: fadeInMap 0.8s ease-out forwards;
+/* Header underline */
+.header-line {
+  height: 2px;
+  width: 120px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,200,0.7), rgba(255,240,150,0.7), transparent);
+  position: relative;
 }
-@keyframes fadeInMap {
-  to { opacity: 1; }
+.header-line::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: lineGlow 3s infinite;
+}
+@keyframes lineGlow {
+  0%,100%{opacity:0.5;transform:scaleX(1)}
+  50%{opacity:0.8;transform:scaleX(1.2)}
 }
 
-/* SVG styling & pan/zoom cursor */
-.map-svg {
-  display: block;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-  transition: transform 0.3s ease;
+/* Year buttons */
+.year-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
 }
+.year-btn.text-white { color: #fff; }
+.year-btn.text-gray-400 { color: #999; }
+
+/* Map SVG container */
 #map-wrapper {
   position: relative;
 }
+#map-wrapper.grabbing { cursor: grabbing; }
+#map-wrapper { cursor: grab; }
 
-/* Pin marker */
+/* SVG itself */
+#map-wrapper svg {
+  display: block;
+  transform-origin: center center;
+  transition: transform 0.2s ease-out;
+}
+
+/* Pin marker design */
 .marker {
   position: absolute;
   transform: translate(-50%, -100%) rotate(-45deg);
@@ -31,7 +56,7 @@
   border-radius: 50% 50% 50% 0;
   background: transparent;
   transition: transform 0.2s ease, background 0.2s ease;
-  cursor: pointer;
+  z-index: 10;
 }
 .marker::after {
   content: '';
@@ -44,39 +69,21 @@
 }
 .marker:hover {
   transform: translate(-50%, -100%) rotate(-45deg) scale(1.2);
-  background: rgba(0, 255, 255, 0.2);
+  background: rgba(0,255,255,0.2);
 }
 .marker.selected {
-  background: rgba(255, 240, 150, 0.3);
+  background: rgba(255,240,150,0.3);
   border-color: yellow;
 }
 
-/* Info-panel arrows */
+/* Sidebar touches */
+aside {
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
 .nav-arrow {
   font-size: 1.5rem;
   font-family: 'Space Grotesk', sans-serif;
   color: #ccc;
   transition: color 0.2s;
 }
-.nav-arrow:hover {
-  color: #fff;
-}
-
-/* Some radio-page sidebar touches */
-aside {
-  border-left: 1px solid rgba(255,255,255,0.1);
-}
-.song-info h2,
-.song-info p {
-  margin: 0; padding: 0;
-}
-.song-info h2 {
-  font-family: 'Space Grotesk', sans-serif;
-  text-transform: uppercase;
-}
-.song-info p {
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-/* slide-in/out for hidden state */
-.hidden { display: none; }
+.nav-arrow:hover { color: #fff; }

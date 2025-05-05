@@ -1,139 +1,112 @@
-// map.js
-
-// ────────────────────────────────────────────────────────
-// CONFIGURATION
-const CONFIG = {
-  // zoom limits
-  ZOOM_MIN: 0.5,
-  ZOOM_MAX: 5,
-
-  // pan limits (in px, tweak to your SVG extents)
-  PAN_LIMIT: {
-    xMin: -200,
-    xMax: 200,
-    yMin: -100,
-    yMax: 100
-  }
-};
-// ────────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', async () => {
-  const mapContainer = document.getElementById('map');
-  const mapWrapper = document.getElementById('map-wrapper');
-  const yearFilter = document.getElementById('year-filter');
-  const infoPanel = document.getElementById('info-panel');
+  const mapWrapper   = document.getElementById('map-wrapper');
+  const mapContainer = document.getElementById('map');       // where SVG goes
+  const yearFilter   = document.getElementById('year-filter');
+  const infoPanel    = document.getElementById('info-panel');
+  const placeName    = document.getElementById('place-name');
+  const placeYear    = document.getElementById('place-year');
+  const placeholder  = document.getElementById('placeholder-text');
+  const eventDetails = document.getElementById('event-details');
+  const btnPrev      = document.getElementById('prev');
+  const btnNext      = document.getElementById('next');
 
-  // 1) Inject inline SVG
+  // 1) Load map.svg
   const svgText = await fetch('map.svg').then(r => r.text());
   mapContainer.innerHTML = svgText;
   const svgEl = mapContainer.querySelector('svg');
 
-  // ensure pointer events work for panning
-  svgEl.style.touchAction = 'none';
-  svgEl.style.transformOrigin = 'center center';
-
-  // track transform
+  // 2) Manual pan/zoom
   let scale = 1, panX = 0, panY = 0;
-
-  // apply current transform
+  const Z_MIN = 0.5, Z_MAX = 5;
   function updateTransform() {
     svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
   }
 
-  // 2) Zoom on wheel (bound to SVG)
-  svgEl.addEventListener('wheel', e => {
+  mapWrapper.addEventListener('wheel', e => {
     e.preventDefault();
-    const delta = -e.deltaY * 0.002;
-    scale = Math.min(CONFIG.ZOOM_MAX, Math.max(CONFIG.ZOOM_MIN, scale + delta));
+    const delta = -e.deltaY * 0.001;
+    scale = Math.max(Z_MIN, Math.min(Z_MAX, scale + delta));
     updateTransform();
   });
 
-  // 3) Panning via pointer drag on SVG
-  let dragging = false, start = {}, origin = {};
-
-  svgEl.addEventListener('pointerdown', e => {
+  let dragging = false, dragStart = {}, panStart = {};
+  mapWrapper.addEventListener('pointerdown', e => {
     dragging = true;
-    start = { x: e.clientX, y: e.clientY };
-    origin = { x: panX, y: panY };
-    svgEl.setPointerCapture(e.pointerId);
-    svgEl.style.cursor = 'grabbing';
+    dragStart = { x: e.clientX, y: e.clientY };
+    panStart  = { x: panX,    y: panY };
+    mapWrapper.setPointerCapture(e.pointerId);
+    mapWrapper.classList.add('grabbing');
   });
-
-  svgEl.addEventListener('pointermove', e => {
+  mapWrapper.addEventListener('pointermove', e => {
     if (!dragging) return;
-    const dx = (e.clientX - start.x) / scale;
-    const dy = (e.clientY - start.y) / scale;
-    panX = origin.x + dx;
-    panY = origin.y + dy;
-    // clamp
-    panX = Math.min(CONFIG.PAN_LIMIT.xMax, Math.max(CONFIG.PAN_LIMIT.xMin, panX));
-    panY = Math.min(CONFIG.PAN_LIMIT.yMax, Math.max(CONFIG.PAN_LIMIT.yMin, panY));
+    const dx = (e.clientX - dragStart.x) / scale;
+    const dy = (e.clientY - dragStart.y) / scale;
+    panX = panStart.x + dx;
+    panY = panStart.y + dy;
     updateTransform();
   });
-
-  svgEl.addEventListener('pointerup', e => {
+  mapWrapper.addEventListener('pointerup', e => {
     dragging = false;
-    svgEl.releasePointerCapture(e.pointerId);
-    svgEl.style.cursor = 'grab';
+    mapWrapper.releasePointerCapture(e.pointerId);
+    mapWrapper.classList.remove('grabbing');
   });
 
-  // initialize cursor
-  svgEl.style.cursor = 'grab';
-
-  // 4) Load data
+  // 3) Load data
   const [placesArr, eventsArr] = await Promise.all([
     fetch('json/map-places.json').then(r => r.json()),
     fetch('json/map-events.json').then(r => r.json())
   ]);
+  const places = Object.fromEntries(placesArr.map(p => [p.id, p]));
 
-  // place lookup
-  const places = {};
-  placesArr.forEach(p => (places[p.id] = p));
-
-  // 5) Year filter UI
-  const years = Array.from(new Set(eventsArr.map(ev => ev.year))).sort((a, b) => b - a);
+  // 4) Year filter buttons
+  const years = Array.from(new Set(eventsArr.map(ev => ev.year))).sort((a,b)=>b-a);
   years.unshift('any');
-  let selectedYear = 'any';
-
   years.forEach(y => {
     const btn = document.createElement('button');
-    btn.textContent = y;
-    btn.dataset.year = y;
-    btn.className = 'year-btn';
-    if (y === 'any') btn.classList.add('selected');
+    btn.textContent   = y;
+    btn.dataset.year  = y;
+    btn.className     = 'year-btn text-gray-400 hover:text-white';
+    if (y === 'any') btn.classList.replace('text-gray-400','text-white');
     yearFilter.append(btn);
   });
-
+  let selectedYear = 'any';
   yearFilter.addEventListener('click', e => {
     if (!e.target.matches('.year-btn')) return;
     selectedYear = e.target.dataset.year;
-    yearFilter.querySelectorAll('.year-btn').forEach(b => b.classList.remove('selected'));
-    e.target.classList.add('selected');
+    yearFilter.querySelectorAll('.year-btn')
+      .forEach(b => b.classList.replace('text-white','text-gray-400'));
+    e.target.classList.replace('text-gray-400','text-white');
     renderMarkers();
+    resetInfo();
   });
 
-  // 6) Marker & Info
-  let currentEvents = [], idx = 0;
-
+  // 5) Marker rendering + interactions
+  let currentEvents = [], currentIndex = 0;
   function renderMarkers() {
-    svgEl.querySelectorAll('.marker').forEach(n => n.remove());
+    // clear old
+    mapWrapper.querySelectorAll('.marker').forEach(m => m.remove());
+    // draw new
+    eventsArr
+      .filter(ev => selectedYear === 'any' || ev.year == selectedYear)
+      .forEach(ev => {
+        const p = places[ev.placeId];
+        if (!p) return;
+        const m = document.createElement('div');
+        m.className = 'marker';
+        m.style.left = `${p.x}px`;
+        m.style.top  = `${p.y}px`;
+        m.addEventListener('click', () => openInfo(ev.placeId));
+        mapWrapper.append(m);
+      });
+  }
 
-    const filtered = eventsArr.filter(ev =>
-      selectedYear === 'any' ? true : ev.year == selectedYear
-    );
-
-    filtered.forEach(ev => {
-      const p = places[ev.placeId];
-      if (!p) return;
-      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-      c.classList.add('marker');
-      c.setAttribute('cx', p.x);
-      c.setAttribute('cy', p.y);
-      c.setAttribute('r', 5);
-      c.setAttribute('title', `${p.name}: ${ev.title}`);
-      c.addEventListener('click', () => openInfo(ev.placeId));
-      svgEl.appendChild(c);
-    });
+  function resetInfo() {
+    placeholder.classList.remove('hidden');
+    placeName.textContent = '';
+    placeYear.textContent = '';
+    eventDetails.innerHTML = '';
+    btnPrev.classList.add('hidden');
+    btnNext.classList.add('hidden');
   }
 
   function openInfo(placeId) {
@@ -141,33 +114,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       ev.placeId === placeId &&
       (selectedYear === 'any' || ev.year == selectedYear)
     );
-    idx = 0;
+    currentIndex = 0;
     showInfo();
   }
 
   function showInfo() {
-    const ev = currentEvents[idx];
-    const p = places[ev.placeId];
-    infoPanel.innerHTML = `
-      <h2 class="header-text text-lg mb-2">${p.name}</h2>
-      <p class="text-sm mb-1"><strong>Year:</strong> ${ev.year}</p>
+    const ev = currentEvents[currentIndex];
+    const p  = places[ev.placeId];
+
+    // hide placeholder, fill header
+    placeholder.classList.add('hidden');
+    placeName.textContent = p.name;
+    placeYear.textContent = ev.year;
+
+    // event content
+    eventDetails.innerHTML = `
       <h3 class="font-semibold">${ev.title}</h3>
-      <p class="mb-4">${ev.description || ''}</p>
-      <div class="flex justify-between">
-        <span class="nav-arrow" id="prev">&larr;</span>
-        <span class="nav-arrow" id="next">&rarr;</span>
-      </div>
+      <p class="text-sm mt-2">${ev.description || ''}</p>
     `;
-    document.getElementById('prev').onclick = () => {
-      idx = (idx - 1 + currentEvents.length) % currentEvents.length;
-      showInfo();
-    };
-    document.getElementById('next').onclick = () => {
-      idx = (idx + 1) % currentEvents.length;
-      showInfo();
-    };
+
+    // arrows logic
+    if (currentEvents.length > 1) {
+      btnPrev.classList.toggle('hidden', currentIndex === 0);
+      btnNext.classList.toggle('hidden', currentIndex === currentEvents.length - 1);
+    } else {
+      btnPrev.classList.add('hidden');
+      btnNext.classList.add('hidden');
+    }
+
+    btnPrev.onclick = () => { currentIndex--; showInfo(); };
+    btnNext.onclick = () => { currentIndex++; showInfo(); };
   }
 
   // initial draw
   renderMarkers();
+  resetInfo();
 });
