@@ -1,90 +1,78 @@
-import * as d3 from 'https://cdn.skypack.dev/d3';
+
+import * as d3 from 'https://cdn.skypack.dev/d3@7';
 
 (async function() {
-  const svg = d3.select('#map');
-  const wrapper = d3.select('#map-wrapper');
-  const info = d3.select('#info-panel');
+  // Elements
+  const svgEl = d3.select('#map');
+  const container = d3.select('#map-container');
   const yearNav = d3.select('#year-filter');
+  const panel = d3.select('#info-panel');
+  const content = d3.select('#info-content');
+  const closeBtn = d3.select('#close-panel');
 
-  const data = await Promise.all([
-    fetch('json/map-places.json').then(r => r.json()),
-    fetch('json/map-events.json').then(r => r.json()),
-    fetch('map.svg').then(r => r.text())
+  // Load data & SVG
+  const [places, events, svgText] = await Promise.all([
+    fetch('json/map-places.json').then(r=>r.json()),
+    fetch('json/map-events.json').then(r=>r.json()),
+    fetch('map.svg').then(r=>r.text())
   ]);
-  const [placesArr, eventsArr, svgText] = data;
-  document.querySelector('#map').innerHTML = svgText;
+  d3.select('#map').html(svgText);
+  const svg = svgEl.select('svg').attr('pointer-events', 'all');
 
-  const places = Object.fromEntries(placesArr.map(p => [p.id, p]));
-  const years = Array.from(new Set(eventsArr.map(e => e.year))).sort((a,b)=>b-a);
-  years.unshift('Any');
+  // Data prep
+  const placeMap = Object.fromEntries(places.map(p=>[p.id,p]));
+  const years = ['All', ...Array.from(new Set(events.map(e=>e.year))).sort((a,b)=>b-a)];
+  let currentYear = 'All';
 
-  let selectedYear = 'Any';
-  let currentEvents = [];
-  let idx = 0;
-
-  // year filter
-  yearNav.selectAll('button')
+  // Year buttons
+  yearNav.selectAll('btn')
     .data(years)
     .enter().append('button')
       .text(d=>d)
-      .attr('class', d=>d==='Any'? 'selected' : '')
+      .classed('selected', d=>d==='All')
       .on('click', (_, y)=>{
-        selectedYear = y;
+        currentYear = y;
         yearNav.selectAll('button').classed('selected', d=>d===y);
-        drawMarkers();
-        hideInfo();
+        draw();
       });
 
-  // zoom & pan
-  const zoom = d3.zoom()
-    .scaleExtent([0.5, 5])
-    .on('zoom', ({transform})=>{
-      svg.attr('transform', transform);
-    });
-  wrapper.call(zoom).on('dblclick.zoom', null);
+  // Zoom & pan
+  const zoom = d3.zoom().scaleExtent([0.5,5]).on('zoom', ({transform})=> svg.attr('transform', transform));
+  container.call(zoom).on('dblclick.zoom', null)
+    .on('mousedown', () => container.classed('grabbing', true))
+    .on('mouseup', () => container.classed('grabbing', false));
 
-  function drawMarkers() {
+  // Draw markers
+  function draw() {
     svg.selectAll('.marker').remove();
-    const filtered = eventsArr.filter(e=> selectedYear==='Any' || e.year==selectedYear);
-    currentEvents = filtered;
-
+    const filtered = events.filter(e=> currentYear==='All' || e.year==currentYear);
     svg.selectAll('.marker')
       .data(filtered)
       .enter().append('circle')
         .attr('class','marker')
-        .attr('cx', d=>places[d.placeId].x)
-        .attr('cy', d=>places[d.placeId].y)
-        .on('click', (_, ev)=> openInfo(ev));
+        .attr('cx', d=> placeMap[d.placeId].x)
+        .attr('cy', d=> placeMap[d.placeId].y)
+        .attr('r', 6)
+        .on('click', (e,d)=> showInfo(d));
   }
 
-  function openInfo(ev) {
-    idx = 0;
-    showInfo(ev.placeId);
-    info.classed('active', true);
+  // Panel
+  function showInfo(ev) {
+    const evs = events.filter(x=> x.placeId===ev.placeId && (currentYear==='All'||x.year==currentYear));
+    content.html('');
+    evs.forEach(item=> {
+      content.append('div').html(`
+        <h2>${placeMap[item.placeId].name} (${item.year})</h2>
+        <h3>${item.title}</h3>
+        <p>${item.description||''}</p>
+        <hr class="my-2 border-gray-600">`
+      );
+    });
+    panel.classed('open', true);
   }
 
-  function hideInfo() {
-    info.classed('active', false);
-  }
+  closeBtn.on('click', ()=> panel.classed('open', false));
 
-  function showInfo(pid) {
-    const evs = eventsArr.filter(e=> e.placeId===pid && (selectedYear==='Any' || e.year==selectedYear));
-    const ev = evs[idx];
-    const p = places[pid];
-
-    info.html(`
-      <h2 class="header-text text-lg mb-2">${p.name}</h2>
-      <p class="mb-1"><strong>Year:</strong> ${ev.year}</p>
-      <h3 class="font-semibold">${ev.title}</h3>
-      <p class="mb-4">${ev.description||''}</p>
-      <div class="flex justify-between">
-        <span class="nav-arrow" id="prev">←</span>
-        <span class="nav-arrow" id="next">→</span>
-      </div>
-    `);
-    d3.select('#prev').on('click', ()=>{ idx=(idx-1+evs.length)%evs.length; showInfo(pid); });
-    d3.select('#next').on('click', ()=>{ idx=(idx+1)%evs.length; showInfo(pid); });
-  }
-
-  drawMarkers();
+  // Initial draw
+  draw();
 })();
