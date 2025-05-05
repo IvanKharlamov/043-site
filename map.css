@@ -15,7 +15,7 @@
 }
 
 #map svg path {
-  fill: var(--map-fill, #333);
+  fill: var(--map-fill, none);
   stroke: var(--map-stroke, #fff);
   stroke-width: 0.25;
   transition: fill 0.3s, stroke 0.3s;
@@ -39,13 +39,15 @@
   fill: yellow;
 }
 
-.year-btn {
-  @apply header-text fade-transition px-3 py-1 rounded;
-  background: rgba(50,50,50,0.6);
+.song-info h1 {
+  color: gray;
+  font-size: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
 }
+
 .year-btn.selected {
   color: white;
-  background: rgba(255,255,255,0.1);
 }
 
 #info-panel .nav-arrow {
